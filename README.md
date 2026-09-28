@@ -19,4 +19,4 @@
 Proyecto académico de análisis y diseño arquitectónico de **Flexcoin**.
 
 ## 📚 Curso
-Arquitectura de Software — Laboratorio 02
+Arquitectura de Software - Laboratorio 02
