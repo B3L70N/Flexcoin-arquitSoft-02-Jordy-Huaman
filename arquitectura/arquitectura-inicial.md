@@ -1,4 +1,4 @@
-# 07. Arquitectura inicial
+# Arquitectura inicial
 
 ## Objetivo
 
@@ -6,7 +6,7 @@ Organizar los módulos identificados dentro de una primera propuesta de arquitec
 
 ---
 
-## 7.1. Arquitectura de tres capas
+## Arquitectura de tres capas
 
 ```mermaid
 flowchart TD
@@ -63,7 +63,7 @@ flowchart TD
 
 ---
 
-## 7.2. Descripción de las capas
+## Descripción de las capas
 
 | Capa | Pregunta que responde | Función |
 |------|-----------------------|---------|
@@ -73,5 +73,77 @@ flowchart TD
 
 ---
 
-## 7.3. Diagrama de arquitectura por capas
+## Diagrama de arquitectura por capas
+
 ![Arquitectura por capas](../graphics/arquitectura-capas.jpg)
+
+---
+
+## Elementos del diagrama
+
+| Grupo | Elementos |
+|-------|-----------|
+| Actores | Usuario, Administrador |
+| Presentación | Aplicación Web, API REST |
+| Negocio | Usuarios, Saldos, Compras, Transferencias, Operaciones |
+| Datos | Base de datos |
+| Sistemas externos | Pasarela de pagos, Proveedor de criptomonedas |
+
+---
+
+## Diagrama general de arquitectura
+
+```mermaid
+flowchart TD
+    subgraph Actores["ACTORES"]
+        A1[Usuario]
+        A2[Administrador]
+    end
+
+    subgraph Presentacion["PRESENTACIÓN"]
+        P1[Aplicación Web]
+        P2[API REST]
+        P1 --> P2
+    end
+
+    subgraph Negocio["LÓGICA DE NEGOCIO"]
+        N1[Usuarios]
+        N2[Saldos]
+        N3[Compras]
+        N4[Transferencias]
+        N5[Operaciones]
+    end
+
+    subgraph Datos["DATOS"]
+        D1[(Base de datos)]
+    end
+
+    subgraph Externos["SISTEMAS EXTERNOS"]
+        E1[Pasarela de pagos]
+        E2[Proveedor de criptomonedas]
+    end
+
+    A1 --> P1
+    A2 --> P1
+    P2 --> N1
+    P2 --> N2
+    P2 --> N3
+    P2 --> N4
+    P2 --> N5
+
+    N1 --> D1
+    N2 --> D1
+    N3 --> D1
+    N4 --> D1
+    N5 --> D1
+
+    N3 --> E1
+    N3 --> E2
+    N4 --> E2
+```
+
+---
+
+## Diagrama gráfico de referencia
+
+![Propuesta de diagrama](../graphics/propuesta-diagrama.jpg)
