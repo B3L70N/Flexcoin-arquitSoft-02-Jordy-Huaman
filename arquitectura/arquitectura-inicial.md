@@ -74,5 +74,4 @@ flowchart TD
 ---
 
 ## 7.3. Diagrama de arquitectura por capas
-
-![Arquitectura por capas](graphics/arquitectura-capas.jpg)
+![Arquitectura por capas](../graphics/arquitectura-capas.jpg)
