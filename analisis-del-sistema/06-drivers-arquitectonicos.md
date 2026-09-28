@@ -1,4 +1,4 @@
-# 06. Drivers arquitectónicos
+#  Drivers arquitectónicos
 
 ## Objetivo
 

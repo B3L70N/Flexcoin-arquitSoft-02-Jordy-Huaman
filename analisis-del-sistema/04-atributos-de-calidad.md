@@ -1,4 +1,4 @@
-# 04. Atributos de calidad
+# Atributos de calidad
 
 ## Objetivo
 

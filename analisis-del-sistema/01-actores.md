@@ -1,4 +1,4 @@
-# 01. Actores del sistema
+#  Actores del sistema
 
 ## Objetivo
 

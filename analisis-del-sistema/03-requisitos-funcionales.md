@@ -1,4 +1,4 @@
-# 03. Requisitos funcionales
+#  Requisitos funcionales
 
 ## Objetivo
 

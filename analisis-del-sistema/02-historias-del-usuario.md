@@ -1,4 +1,4 @@
-# 02. Historias de usuario
+#  Historias de usuario
 
 ## Objetivo
 
