@@ -1,95 +1,82 @@
-# Estilo Arquitectónico
+# Enfoque Arquitectónico
 
 ## Objetivo
 
-Definir el estilo arquitectónico del sistema Flexcoin y representar su estructura global mediante un diagrama que muestre los principales componentes y sus relaciones.
+Definir el enfoque arquitectónico que guía la organización interna del código y el control de dependencias del sistema Flexcoin.
 
 ---
 
-## Estilo seleccionado
+## Enfoque seleccionado
 
-**Monolito modular con arquitectura en capas.**
-
-El sistema se despliega como una aplicación única, pero internamente se organiza en módulos independientes y capas bien definidas. Esta combinación responde a los drivers arquitectónicos identificados en el análisis.
+**Clean Architecture (Arquitectura Limpia).**
 
 ---
 
-## Justificación
+## Descripción aplicada a Flexcoin
 
-| Driver | Cómo lo responde el estilo |
-|--------|----------------------------|
-| DA01 Consistencia | El control de concurrencia se centraliza en un módulo específico dentro del monolito, evitando conflictos entre operaciones. |
-| DA02 Rendimiento | La separación por capas permite incorporar caché para consultas frecuentes de saldos. |
-| DA03 Seguridad | La autenticación y autorización se gestionan en la capa de presentación y en los servicios de usuarios. |
-| DA04 Servicios externos | Los adaptadores para la pasarela de pagos y el proveedor de criptomonedas se aíslan en la capa de datos e infraestructura. |
-| DA06 Mantenibilidad | La modularidad y las capas permiten modificar una parte del sistema sin afectar otras. |
-
----
-
-## Capas del sistema
-
-| Capa | Responsabilidad |
-|------|-----------------|
-| Presentación | Recibe las peticiones HTTP, valida los datos de entrada y devuelve respuestas JSON. |
-| Lógica de negocio | Aplica las reglas del sistema, coordina los módulos y controla la concurrencia. |
-| Datos | Gestiona la persistencia y las consultas a la base de datos. |
+| Elemento | Descripción aplicada a Flexcoin |
+|----------|----------------------------------|
+| Patrón / enfoque arquitectónico | Clean Architecture (Arquitectura Limpia). |
+| Objetivo | Separar las reglas de negocio de los detalles tecnológicos y controlar las dependencias hacia el dominio. |
+| ¿Qué problema resuelve? | Evita el acoplamiento entre la interfaz web, las reglas del negocio como el control de saldos y transferencias, y las tecnologías externas como base de datos, pasarela de pagos y proveedor de criptomonedas. |
+| Capas definidas | Dominio, Aplicación, Infraestructura y Presentación. |
+| Beneficios | Facilita el mantenimiento y las pruebas unitarias. Permite cambiar el proveedor de criptomonedas o la pasarela de pagos sin afectar las reglas del negocio. Mejora la organización y separación de responsabilidades del código. |
 
 ---
 
-## Módulos del sistema
+## Regla de dependencias
 
-| Módulo | Responsabilidad |
-|--------|-----------------|
-| Usuarios | Registro, autenticación y gestión de cuentas. |
-| Saldos | Consulta y actualización de los saldos de criptomonedas. |
-| Compras | Órdenes de compra y confirmación con la pasarela de pagos. |
-| Transferencias | Movimientos de criptomonedas entre usuarios. |
-| Operaciones | Historial, retiros y depósitos. |
-| Control de concurrencia | Bloqueo y serialización de las operaciones que modifican saldos. |
+Las dependencias siempre apuntan hacia el dominio.
 
----
+- La capa de **Presentación** depende de **Aplicación**.
+- La capa de **Aplicación** depende de **Dominio**.
+- La capa de **Infraestructura** implementa los contratos definidos en **Dominio**, pero no al revés.
+- El **Dominio** no depende de ninguna otra capa.
 
-## Sistemas externos
-
-| Sistema | Propósito |
-|---------|-----------|
-| Pasarela de pagos | Procesar pagos para la compra de criptomonedas. |
-| Proveedor de criptomonedas | Adquirir, consultar y transferir criptomonedas reales. |
-| Red blockchain | Validar y registrar transacciones on-chain. |
-| Servicio de notificaciones | Informar al usuario sobre el estado de sus operaciones. |
+Esto garantiza que las reglas del negocio, especialmente el control de concurrencia y la consistencia de saldos, permanezcan aisladas de los detalles tecnológicos.
 
 ---
 
-## Relación con el enfoque arquitectónico
+## Capas y responsabilidades
 
-La arquitectura en capas se complementa con el enfoque **Clean Architecture**, que organiza internamente cada capa en Dominio, Aplicación, Infraestructura y Presentación, con dependencias siempre apuntando hacia el dominio.
-
-Esto significa que:
-
-- La capa de **Presentación** del estilo corresponde a la capa de **Presentación + Infraestructura** del enfoque.
-- La capa de **Lógica de negocio** del estilo corresponde a las capas de **Aplicación + Dominio** del enfoque.
-- La capa de **Datos** del estilo corresponde a la capa de **Infraestructura** del enfoque.
-
-El detalle completo del enfoque se documenta en `arquitectura/enfoque/enfoque-arquitectonico.md`.
+| Capa | Responsabilidad en Flexcoin |
+|------|------------------------------|
+| Presentación | Interfaz Angular y API REST. Recibe las peticiones del usuario y las responde. |
+| Aplicación | Casos de uso como comprar criptomonedas, transferir saldos, consultar historial. Coordina las operaciones. |
+| Dominio | Entidades como Usuario, Saldo, Operación. Reglas de negocio como validar fondos, controlar concurrencia y evitar sobregiros. |
+| Infraestructura | Implementaciones concretas de repositorios, adaptadores de pasarela de pagos, proveedor de criptomonedas y notificaciones. |
 
 ---
 
-## Diagrama de estructura global
+## Módulos del sistema dentro del enfoque
 
-![Estilo arquitectónico monolito modular](../../graphics/estilo-flexcoinV1.jpg)
+| Módulo | Capa principal | Responsabilidad |
+|--------|----------------|-----------------|
+| Usuarios | Dominio y Aplicación | Registro, autenticación, roles. |
+| Saldos | Dominio | Consulta y actualización de saldos. |
+| Compras | Aplicación | Orquestar compra de criptomonedas. |
+| Transferencias | Aplicación | Orquestar transferencias entre usuarios. |
+| Operaciones | Aplicación | Historial, retiros y depósitos. |
+| Control de concurrencia | Dominio | Reglas que evitan inconsistencias en los saldos. |
 
 ---
 
-## Flujo de dependencias
+## Diagrama del enfoque arquitectónico
+
+![Enfoque arquitectónico Clean Architecture](../../graphics/enfoque-flexcoinV1.jpg)
+
+---
+
+## Diagrama de dependencias en Mermaid
 
 ```mermaid
 flowchart TD
-    subgraph Presentacion ["Presentación (capa externa)"]
+    subgraph Presentacion ["Presentación"]
         P1[Componentes Angular]
         P2[Servicios de estado]
     end
 
-    subgraph Aplicacion ["Aplicación (casos de uso)"]
+    subgraph Aplicacion ["Aplicación"]
         A1[Registrar usuario]
         A2[Consultar saldo]
         A3[Comprar criptomonedas]
@@ -98,13 +85,13 @@ flowchart TD
         A6[Retirar criptomonedas]
     end
 
-    subgraph Dominio ["Dominio (núcleo)"]
+    subgraph Dominio ["Dominio"]
         D1[Entidades y reglas de negocio]
         D2[Contratos e interfaces]
         D3[Control de concurrencia]
     end
 
-    subgraph Infraestructura ["Infraestructura (adaptadores)"]
+    subgraph Infraestructura ["Infraestructura"]
         I1[Repositorios]
         I2[Procesador de pagos]
         I3[Proveedor de criptomonedas]
@@ -140,9 +127,29 @@ Las flechas continuas representan invocación en tiempo de ejecución. Las flech
 
 ---
 
-## Regla de dependencias
+## Aplicación del enfoque en Flexcoin
 
-1. El dominio no importa nada de las capas externas.
-2. Los casos de uso solo conocen entidades y contratos.
-3. Los adaptadores implementan contratos y son intercambiables.
-4. Cambiar de tecnología implica modificar la infraestructura, no el dominio.
+### Dominio aislado
+
+El dominio contiene las entidades y las reglas de negocio críticas, como el control de concurrencia para evitar inconsistencias en los saldos. No depende de Angular, Express, la base de datos, ni los SDK de Culqi, Binance o blockchain.
+
+### Casos de uso en la capa de aplicación
+
+Los casos de uso orquestan las operaciones del sistema. Por ejemplo, `ComprarCriptomonedasCasoUso` coordina el repositorio de saldos, el procesador de pagos, el proveedor de criptomonedas y el notificador. Pero solo conoce las interfaces, no las implementaciones concretas.
+
+### Adaptadores intercambiables en infraestructura
+
+Los adaptadores implementan los contratos definidos en el dominio. Por ejemplo, `ProcesadorPagosCulqi` y `ProcesadorPagosSimulado` implementan `ProcesadorPagos`. Cambiar de proveedor implica agregar un nuevo adaptador, no tocar la lógica del negocio.
+
+### Raíz de composición
+
+El archivo `app.config.ts` es el único lugar donde se decide qué adaptador cumple cada contrato. Usa `useFactory` e `InjectionToken` para inyectar las implementaciones en los casos de uso.
+
+---
+
+## Beneficios del enfoque en Flexcoin
+
+- **Pruebas sin infraestructura.** El dominio puede probarse sin navegador, sin base de datos y sin servicios externos.
+- **Cambio de proveedor sin dolor.** Cambiar de Culqi a Niubiz implica escribir un adaptador nuevo, no modificar la lógica de compras.
+- **Consistencia controlada.** El control de concurrencia vive en el dominio y no puede ser evadido por ningún adaptador.
+- **Mantenibilidad real.** Cada capa tiene una responsabilidad clara, lo que reduce el acoplamiento y facilita la evolución del sistema.

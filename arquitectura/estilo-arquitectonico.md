@@ -62,4 +62,4 @@ El sistema se despliega como una aplicación única, pero internamente se organi
 
 ## Diagrama de estructura global
 
-![Estilo arquitectónico monolito modular](../graphics/monolito-flexcoin.jpg)
+![Estilo arquitectónico monolito modular](../graphics/monolito-flexcoin(estilo).jpg
