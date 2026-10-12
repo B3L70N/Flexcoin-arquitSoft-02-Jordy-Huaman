@@ -75,7 +75,7 @@ flowchart TD
 
 ## Diagrama de arquitectura por capas
 
-![Arquitectura por capas](../graphics/arquitectura-capas.jpg)
+![Arquitectura por capas](../../graphics/arquitectura-capas.jpg)
 
 ---
 
@@ -146,4 +146,4 @@ flowchart TD
 
 ## Diagrama gráfico de referencia
 
-![Propuesta de diagrama](../graphics/propuesta-diagrama.jpg)
+![Propuesta de diagrama](../../graphics/propuesta-diagrama.jpg)
