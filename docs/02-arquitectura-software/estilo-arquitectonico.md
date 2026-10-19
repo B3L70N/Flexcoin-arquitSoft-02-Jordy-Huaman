@@ -40,12 +40,14 @@ El sistema se despliega como una aplicación única, pero internamente se organi
 
 | Módulo | Responsabilidad |
 |--------|-----------------|
-| Usuarios | Registro, autenticación y gestión de cuentas. |
-| Saldos | Consulta y actualización de los saldos de criptomonedas. |
-| Compras | Órdenes de compra y confirmación con la pasarela de pagos. |
-| Transferencias | Movimientos de criptomonedas entre usuarios. |
-| Operaciones | Historial, retiros y depósitos. |
-| Control de concurrencia | Bloqueo y serialización de las operaciones que modifican saldos. |
+| 1. Usuarios | Registro, autenticación y gestión de roles. |
+| 2. Saldos | Consulta y actualización de los saldos de criptomonedas. |
+| 3. Compras | Órdenes de compra y confirmación con la pasarela de pagos. |
+| 4. Transferencias | Movimientos de criptomonedas entre usuarios. |
+| 5. Operaciones | Historial, retiros y depósitos. |
+| 6. Pagos | Cobro mediante la pasarela de pago. |
+| 7. Notificaciones | Avisos al usuario sobre el estado de sus operaciones. |
+| 8. Control de concurrencia | Bloqueo y serialización de las operaciones que modifican saldos (módulo transversal). |
 
 ---
 
@@ -60,6 +62,77 @@ El sistema se despliega como una aplicación única, pero internamente se organi
 
 ---
 
+## Relación con el enfoque arquitectónico
+
+La arquitectura en capas se complementa con el enfoque **Clean Architecture**, que organiza internamente cada capa en Dominio, Aplicación, Infraestructura y Presentación, con dependencias siempre apuntando hacia el dominio.
+
+Esto significa que:
+
+- La capa de **Presentación** del estilo corresponde a la capa de **Presentación + Infraestructura** del enfoque.
+- La capa de **Lógica de negocio** del estilo corresponde a las capas de **Aplicación + Dominio** del enfoque.
+- La capa de **Datos** del estilo corresponde a la capa de **Infraestructura** del enfoque.
+
+El detalle completo del enfoque se documenta en `arquitectura/enfoque/enfoque-arquitectonico.md`.
+
+---
+
 ## Diagrama de estructura global
 
-![Estilo arquitectónico monolito modular](../../graphics/monolito-flexcoin(estilo).jpg)
+![Estilo arquitectónico monolito modular](../graphics/estilo-flexcoinV1.jpg)
+
+---
+
+## Flujo de dependencias
+
+```mermaid
+flowchart TD
+    subgraph Presentacion ["Presentación (capa externa)"]
+        P1[Componentes Angular]
+        P2[Servicios de estado]
+    end
+
+    subgraph Aplicacion ["Aplicación (casos de uso)"]
+        A1[Registrar usuario]
+        A2[Consultar saldo]
+        A3[Comprar criptomonedas]
+        A4[Transferir criptomonedas]
+        A5[Consultar historial]
+        A6[Retirar criptomonedas]
+    end
+
+    subgraph Dominio ["Dominio (núcleo)"]
+        D1[Entidades y reglas de negocio]
+        D2[Contratos e interfaces]
+        D3[Control de concurrencia]
+    end
+
+    subgraph Infraestructura ["Infraestructura (adaptadores)"]
+        I1[Repositorios]
+        I2[Procesador de pagos]
+        I3[Proveedor de criptomonedas]
+        I4[Servicio de blockchain]
+        I5[Notificaciones]
+    end
+
+    P1 --> A1
+    P1 --> A2
+    P1 --> A3
+    P1 --> A4
+    P1 --> A5
+    P1 --> A6
+
+    A1 --> D2
+    A2 --> D2
+    A3 --> D2
+    A4 --> D2
+    A5 --> D2
+    A6 --> D2
+
+    D2 --> D1
+    D2 --> D3
+
+    I1 -.->|implementa| D2
+    I2 -.->|implementa| D2
+    I3 -.->|implementa| D2
+    I4 -.->|implementa| D2
+    I5 -.->|implementa| D2
