@@ -41,4 +41,4 @@ El sistema requiere una arquitectura que:
 
 ## Justificación del proyecto
 
-Flexcoin no busca reinventar una plataforma de criptomonedas, sino demostrar que las decisiones arquitectónicas correctas pueden evitar fallos como el de 2014. El valor del proyecto está en el análisis y las decisiones, no en la implementación.
+Flexcoin no busca reinventar una plataforma de criptomonedas, sino demostrar que las decisiones arquitectónicas correctas pueden evitar fallos como el de 2014. El valor del proyecto está en el análisis y las decisiones.
