@@ -76,9 +76,6 @@ El detalle completo del enfoque se documenta en `arquitectura/enfoque/enfoque-ar
 
 ---
 
-## Diagrama de estructura global
-
-![Estilo arquitectónico monolito modular](../graphics/estilo-flexcoinV1.jpg)
 
 ---
 
