@@ -31,7 +31,7 @@ El avance del proyecto se organiza en un tablero de Trello con las etapas de bac
 Explora la arquitectura y el flujo de QuillaCoin a través de nuestra presentación web dinámica.
 
 <div align="center">
-  <a href="https://loquacious-maamoul-ad9a6e.netlify.app" target="_blank">
+  <a href="https://harmonious-torte-e80cde.netlify.app" target="_blank">
     <img src="https://img.shields.io/badge/Ver%20Presentaci%C3%B3n%20Online-Netlify-00C7B7?style=for-the-badge&logo=netlify&logoColor=white" alt="Netlify Presentation" />
   </a>
 </div>
