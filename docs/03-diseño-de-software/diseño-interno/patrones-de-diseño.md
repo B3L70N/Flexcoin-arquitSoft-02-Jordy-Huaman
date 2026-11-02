@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Documentar los patrones de diseño aplicados en el backend de Flexcoin, indicando dónde se usan, qué problema resuelven y con qué tecnología se implementan, para que el equipo programe de forma uniforme.
+Documentar los patrones de diseño aplicados en el backend de QuillaCoin, indicando dónde se usan, qué problema resuelven y con qué tecnología se implementan, para que el equipo programe de forma uniforme.
 
 ## Contexto
 

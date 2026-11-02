@@ -2,13 +2,13 @@
 
 ## Objetivo
 
-Describir el problema o necesidad que da origen al sistema Flexcoin, antes de entrar al análisis funcional y arquitectónico.
+Describir el problema o necesidad que da origen al sistema QuillaCoin, antes de entrar al análisis funcional y arquitectónico.
 
 ---
 
 ## Contexto
 
-Flexcoin es una plataforma académica que busca ofrecer servicios de compra, venta y transferencia de criptomonedas a través de una aplicación web. La idea es que los usuarios puedan gestionar sus activos digitales desde un solo lugar, con operaciones controladas y seguras.
+QuillaCoin es una plataforma académica que busca ofrecer servicios de compra, venta y transferencia de criptomonedas a través de una aplicación web. La idea es que los usuarios puedan gestionar sus activos digitales desde un solo lugar, con operaciones controladas y seguras.
 
 El caso toma como referencia el incidente de Flexcoin en 2014, cuando la plataforma sufrió un ataque que vació su hot wallet por no controlar adecuadamente las operaciones concurrentes. Ese antecedente marca el eje del proyecto actual, que prioriza la consistencia y el control de concurrencia.
 
@@ -41,4 +41,4 @@ El sistema requiere una arquitectura que:
 
 ## Justificación del proyecto
 
-Flexcoin no busca reinventar una plataforma de criptomonedas, sino demostrar que las decisiones arquitectónicas correctas pueden evitar fallos como el de 2014. El valor del proyecto está en el análisis y las decisiones.
+QuillaCoin no busca reinventar una plataforma de criptomonedas, sino demostrar que las decisiones arquitectónicas correctas pueden evitar fallos como el de 2014. El valor del proyecto está en el análisis y las decisiones.

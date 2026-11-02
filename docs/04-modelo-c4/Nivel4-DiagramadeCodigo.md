@@ -1,6 +1,6 @@
 # Nivel 4 · Diagrama de código
 
-> **Proyecto:** Flexcoin · **Módulos detallados:** Transferencias y Control de concurrencia  
+> **Proyecto:** QuillaCoin · **Módulos detallados:** Transferencias y Control de concurrencia<br>
 > **Modelo:** C4 · Nivel 4 de 4 · **Notación:** UML · **Versión:** 1.0
 
 ---
@@ -14,7 +14,7 @@ Mostrar **cómo está organizado el código** de un componente del nivel 3: sus 
 | Pregunta que responde | ¿Qué clases existen dentro de un módulo y cómo se relacionan? |
 | Audiencia | Desarrolladores |
 | Notación | UML (diagrama de clases y diagrama de secuencia). El modelo C4 recomienda UML para este nivel |
-| Por qué estos dos módulos | El nivel 4 se dibuja para los componentes más importantes o complejos. Transferencias y Control de concurrencia concentran las reglas críticas de Flexcoin y las integraciones externas |
+| Por qué estos dos módulos | El nivel 4 se dibuja para los componentes más importantes o complejos. Transferencias y Control de concurrencia concentran las reglas críticas de QuillaCoin y las integraciones externas |
 | Nivel anterior | `Nivel3-Diagrama-de-Componentes.md` |
 
 ---

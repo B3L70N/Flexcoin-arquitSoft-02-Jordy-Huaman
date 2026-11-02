@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Documentar cómo se aplican los principios SOLID en el backend de Flexcoin, organizado con Clean Architecture, para que cada módulo se programe de forma uniforme y las reglas de negocio no dependan de la tecnología.
+Documentar cómo se aplican los principios SOLID en el backend de QuillaCoin, organizado con Clean Architecture, para que cada módulo se programe de forma uniforme y las reglas de negocio no dependan de la tecnología.
 
 ## Contexto
 
@@ -68,7 +68,7 @@ flowchart TB
 
 ## SOLID aplicado al módulo Transferencias
 
-| Principio | Dónde se aplica | Cómo se cumple en Flexcoin | Archivos |
+| Principio | Dónde se aplica | Cómo se cumple en QuillaCoin | Archivos |
 |---|---|---|---|
 | **S** · Responsabilidad única | Todas las capas | Cada clase tiene una sola tarea: el controlador recibe la petición HTTP, el caso de uso coordina la transferencia, la entidad aplica las reglas del dominio y el repositorio guarda en PostgreSQL | `transferencia.controller.ts`, `transferir-criptomonedas.use-case.ts`, `transferencia.ts`, `postgres-transferencia-repository.ts` |
 | **O** · Abierto/cerrado | Infraestructura | Para agregar un nuevo proveedor de criptomonedas se crea un nuevo adaptador; el caso de uso de transferencia no se modifica | `binance-cripto.adapter.ts`, `cripto-simulado.adapter.ts` |
@@ -76,7 +76,7 @@ flowchart TB
 | **I** · Segregación de interfaces | Dominio | Cada interfaz tiene solo lo que Transferencias necesita: `CriptoPort` solo transfiere, `BlockchainPort` solo registra on-chain, `TransferenciaRepository` solo guarda y busca transferencias | `cripto-port.ts`, `blockchain-port.ts`, `transferencia-repository.ts` |
 | **D** · Inversión de dependencias | Aplicación | El caso de uso recibe interfaces por el constructor y no conoce Binance, PostgreSQL ni la red blockchain; las implementaciones se conectan en `transferencias.module.ts` | `transferir-criptomonedas.use-case.ts`, `transferencias.module.ts` |
 
-## Qué pasaría sin SOLID en Flexcoin
+## Qué pasaría sin SOLID en QuillaCoin
 
 | Situación real | Sin SOLID | Con SOLID |
 |---|---|---|

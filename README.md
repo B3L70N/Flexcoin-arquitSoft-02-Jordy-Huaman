@@ -4,7 +4,7 @@
 
 ![Course](https://img.shields.io/badge/CURSO-ARQUITECTURA%20DE%20SOFTWARE-purple?style=for-the-badge)
 
-# 💰 FLEXCOIN
+# 💰 QuillaCoin
 
 ### 🎓 Proyecto Académico - Arquitectura de Software
 
@@ -16,7 +16,7 @@
 **Jordy Julian Huamán Lozano**
 
 ## 📖 Descripción
-Proyecto académico de análisis y diseño arquitectónico de **Flexcoin**.
+Proyecto académico de análisis y diseño arquitectónico de **QuillaCoin**.
 
 ## 📋 Gestión del proyecto
 
@@ -26,7 +26,7 @@ El avance del proyecto se organiza en un tablero de Trello con las etapas de bac
 
 ## 🚀 Presentación Interactiva
 
-Explora la arquitectura y el flujo de Flexcoin a través de nuestra presentación web dinámica.
+Explora la arquitectura y el flujo de QuillaCoin a través de nuestra presentación web dinámica.
 
 <div align="center">
   <a href="https://loquacious-maamoul-ad9a6e.netlify.app" target="_blank">

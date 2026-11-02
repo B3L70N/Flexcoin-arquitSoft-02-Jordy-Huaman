@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Documentar las decisiones arquitectónicas importantes tomadas durante el diseño de Flexcoin, junto con su justificación y los drivers que las motivan.
+Documentar las decisiones arquitectónicas importantes tomadas durante el diseño de QuillaCoin, junto con su justificación y los drivers que las motivan.
 
 ADR significa Architecture Decision Record (Registro de Decisión Arquitectónica).
 
@@ -50,7 +50,7 @@ ADR significa Architecture Decision Record (Registro de Decisión Arquitectónic
 
 **Decisión.** Implementar el control de concurrencia dentro del módulo de gestión de saldos, usando transacciones controladas y mecanismos de bloqueo o serialización.
 
-**Justificación.** El driver DA01 (Consistencia) es crítico en Flexcoin. Las operaciones concurrentes que modifican saldos pueden generar inconsistencias si no se controlan. El caso histórico de 2014 demuestra el riesgo de no atender este punto.
+**Justificación.** El driver DA01 (Consistencia) es crítico en QuillaCoin. Las operaciones concurrentes que modifican saldos pueden generar inconsistencias si no se controlan. El caso histórico de 2014 demuestra el riesgo de no atender este punto.
 
 **Resultado.** Módulo de gestión de saldos con control transaccional.
 

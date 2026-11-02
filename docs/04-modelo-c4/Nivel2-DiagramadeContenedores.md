@@ -1,13 +1,13 @@
 # Nivel 2 · Diagrama de contenedores
 
-> **Proyecto:** Flexcoin  
+> **Proyecto:** QuillaCoin<br>
 > **Modelo:** C4 · Nivel 2 de 4 · **Versión:** 1.0
 
 ---
 
 ## 1. Objetivo
 
-Abrir la caja «Flexcoin» del nivel 1 y mostrar los **contenedores** que la forman: las aplicaciones y almacenes de datos que se ejecutan por separado, la tecnología de cada uno y cómo se comunican.
+Abrir la caja «QuillaCoin» del nivel 1 y mostrar los **contenedores** que la forman: las aplicaciones y almacenes de datos que se ejecutan por separado, la tecnología de cada uno y cómo se comunican.
 
 | Aspecto | Descripción |
 |---|---|
@@ -26,9 +26,9 @@ flowchart TB
     Usuario["👤 Usuario<br/>[Persona]"]
     Admin["👤 Administrador<br/>[Persona]"]
 
-    subgraph Flexcoin ["Flexcoin [Sistema de software]"]
+    subgraph QuillaCoin ["QuillaCoin [Sistema de software]"]
         WebApp["🖥️ Aplicación web<br/>[Contenedor: SPA - Angular]<br/>Interfaz para usuarios y administradores"]
-        API["⚙️ API Flexcoin<br/>[Contenedor: Node.js + Express]<br/>Monolito modular. Expone la API REST,<br/>aplica las reglas de negocio e integra los sistemas externos"]
+        API["⚙️ API QuillaCoin<br/>[Contenedor: Node.js + Express]<br/>Monolito modular. Expone la API REST,<br/>aplica las reglas de negocio e integra los sistemas externos"]
         DB[("🗄️ Base de datos<br/>[Contenedor: PostgreSQL]<br/>Usuarios, saldos, operaciones y transferencias")]
         Cache[("⚡ Caché<br/>[Contenedor: Redis]<br/>Saldos de consulta frecuente en memoria")]
     end
@@ -70,7 +70,7 @@ flowchart TB
 | Contenedor | Tecnología | Responsabilidad | Datos que maneja |
 |---|---|---|---|
 | **Aplicación web** | SPA · Angular | Interfaz de operaciones para usuarios y panel de administración. Se ejecuta en el navegador | Ninguno persistente; solo el estado de la pantalla |
-| **API Flexcoin** | Node.js + Express | Expone la API REST, aplica las reglas de negocio, controla la concurrencia e integra los sistemas externos. Es un **monolito modular**: un solo proceso con módulos internos | Ninguno propio; usa la base de datos y la caché |
+| **API QuillaCoin** | Node.js + Express | Expone la API REST, aplica las reglas de negocio, controla la concurrencia e integra los sistemas externos. Es un **monolito modular**: un solo proceso con módulos internos | Ninguno propio; usa la base de datos y la caché |
 | **Base de datos** | PostgreSQL | Almacena de forma permanente la información del negocio | Usuarios, saldos, operaciones y transferencias |
 | **Caché** | Redis | Guarda en memoria los saldos más consultados para responder más rápido | Copia temporal de los saldos |
 
@@ -81,13 +81,13 @@ flowchart TB
 | Origen | Destino | Descripción | Protocolo |
 |---|---|---|---|
 | Usuario, Administrador | Aplicación web | Usan la aplicación desde el navegador | HTTPS |
-| Aplicación web | API Flexcoin | Llama a la API | HTTPS/JSON |
-| API Flexcoin | Base de datos | Lee y escribe información | SQL sobre TCP |
-| API Flexcoin | Caché | Lee y escribe los saldos en memoria | TCP |
-| API Flexcoin | Pasarela de pago | Solicita cobros | HTTPS/REST |
-| API Flexcoin | Proveedor de criptomonedas | Ejecuta transferencias y consultas | HTTPS/REST |
-| API Flexcoin | Red blockchain | Registra transacciones on-chain | HTTPS/REST |
-| API Flexcoin | Servicio de notificaciones | Envía avisos de estado | HTTPS/REST |
+| Aplicación web | API QuillaCoin | Llama a la API | HTTPS/JSON |
+| API QuillaCoin | Base de datos | Lee y escribe información | SQL sobre TCP |
+| API QuillaCoin | Caché | Lee y escribe los saldos en memoria | TCP |
+| API QuillaCoin | Pasarela de pago | Solicita cobros | HTTPS/REST |
+| API QuillaCoin | Proveedor de criptomonedas | Ejecuta transferencias y consultas | HTTPS/REST |
+| API QuillaCoin | Red blockchain | Registra transacciones on-chain | HTTPS/REST |
+| API QuillaCoin | Servicio de notificaciones | Envía avisos de estado | HTTPS/REST |
 
 ---
 

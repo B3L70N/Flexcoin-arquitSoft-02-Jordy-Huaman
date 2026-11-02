@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Definir el enfoque arquitectónico que guía la organización interna del código y el control de dependencias del sistema Flexcoin.
+Definir el enfoque arquitectónico que guía la organización interna del código y el control de dependencias del sistema QuillaCoin.
 
 ---
 
@@ -12,9 +12,9 @@ Definir el enfoque arquitectónico que guía la organización interna del códig
 
 ---
 
-## Descripción aplicada a Flexcoin
+## Descripción aplicada a QuillaCoin
 
-| Elemento | Descripción aplicada a Flexcoin |
+| Elemento | Descripción aplicada a QuillaCoin |
 |----------|----------------------------------|
 | Patrón / enfoque arquitectónico | Clean Architecture (Arquitectura Limpia). |
 | Objetivo | Separar las reglas de negocio de los detalles tecnológicos y controlar las dependencias hacia el dominio. |
@@ -39,7 +39,7 @@ Esto garantiza que las reglas del negocio, especialmente el control de concurren
 
 ## Capas y responsabilidades
 
-| Capa | Responsabilidad en Flexcoin |
+| Capa | Responsabilidad en QuillaCoin |
 |------|------------------------------|
 | Presentación | Interfaz Angular y API REST. Recibe las peticiones del usuario y las responde. |
 | Aplicación | Casos de uso como comprar criptomonedas, transferir saldos, consultar historial. Coordina las operaciones. |
@@ -127,7 +127,7 @@ Las flechas continuas representan invocación en tiempo de ejecución. Las flech
 
 ---
 
-## Aplicación del enfoque en Flexcoin
+## Aplicación del enfoque en QuillaCoin
 
 ### Dominio aislado
 
@@ -147,7 +147,7 @@ El archivo `app.config.ts` es el único lugar donde se decide qué adaptador cum
 
 ---
 
-## Beneficios del enfoque en Flexcoin
+## Beneficios del enfoque en QuillaCoin
 
 - **Pruebas sin infraestructura.** El dominio puede probarse sin navegador, sin base de datos y sin servicios externos.
 - **Cambio de proveedor sin dolor.** Cambiar de Culqi a Niubiz implica escribir un adaptador nuevo, no modificar la lógica de compras.

@@ -1,6 +1,6 @@
 # Diseño interno de módulos
 
-> **Proyecto:** Flexcoin · **Backend:** Node.js + TypeScript · **Módulo de referencia:** Transferencias  
+> **Proyecto:** QuillaCoin · **Backend:** Node.js + TypeScript · **Módulo de referencia:** Transferencias<br>
 > **Enfoque arquitectónico:** Clean Architecture dentro de cada módulo del monolito modular  
 > **Nivel C4:** 4 - Código · **Versión:** 1.0
 

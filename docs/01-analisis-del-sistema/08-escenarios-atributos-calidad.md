@@ -1,4 +1,4 @@
-# Escenarios de atributos de calidad de Flexcoin
+# Escenarios de atributos de calidad de QuillaCoin
 
 ## EQ-01. Consistencia: transferencias concurrentes
 
@@ -45,7 +45,7 @@
 |---|---|
 | **Atributo de calidad** | Escalabilidad |
 | **Fuente** | Incremento de solicitudes de los usuarios |
-| **Estímulo** | Aumenta la cantidad de usuarios que utilizan Flexcoin simultáneamente. |
+| **Estímulo** | Aumenta la cantidad de usuarios que utilizan QuillaCoin simultáneamente. |
 | **Condición** | Se realiza una prueba con datos, configuración y solicitudes documentadas. |
 | **Respuesta esperada** | El sistema soporta el aumento de usuarios sin superar los límites acordados de tiempo de respuesta y errores. |
 | **Medida** | **Propuesta por validar:** soportar hasta 200 usuarios simultáneos, con el 95 % de las respuestas por debajo de 3 segundos y menos del 1 % de errores técnicos. |

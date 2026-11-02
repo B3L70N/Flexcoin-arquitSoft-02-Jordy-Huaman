@@ -12,7 +12,7 @@ flowchart TB
     end
 
     %% ============ BACKEND (MONOLITO) ============
-    subgraph Backend ["API Flexcoin<br/>[Contenedor: Node.js + Express - monolito modular]"]
+    subgraph Backend ["API QuillaCoin<br/>[Contenedor: Node.js + Express - monolito modular]"]
 
         API["API REST<br/>[Componente: rutas - middlewares Express]<br/>Expone /api/v1, valida entrada y autentica JWT"]
 

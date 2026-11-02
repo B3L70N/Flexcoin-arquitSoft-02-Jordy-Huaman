@@ -1,13 +1,13 @@
 # Nivel 3 · Diagrama de componentes
 
-> **Proyecto:** Flexcoin · **Contenedor detallado:** API Flexcoin  
+> **Proyecto:** QuillaCoin · **Contenedor detallado:** API QuillaCoin<br>
 > **Modelo:** C4 · Nivel 3 de 4 · **Versión:** 1.0
 
 ---
 
 ## 1. Objetivo
 
-Abrir el contenedor **API Flexcoin** del nivel 2 y mostrar sus **componentes**: los módulos del monolito modular, la responsabilidad de cada uno y cómo se relacionan entre sí y con la base de datos, la caché y los sistemas externos.
+Abrir el contenedor **API QuillaCoin** del nivel 2 y mostrar sus **componentes**: los módulos del monolito modular, la responsabilidad de cada uno y cómo se relacionan entre sí y con la base de datos, la caché y los sistemas externos.
 
 | Aspecto | Descripción |
 |---|---|
@@ -25,7 +25,7 @@ Abrir el contenedor **API Flexcoin** del nivel 2 y mostrar sus **componentes**: 
 flowchart TB
     WebApp["🖥️ Aplicación web<br/>[Contenedor: SPA - Angular]"]
 
-    subgraph API ["API Flexcoin [Contenedor: Node.js + Express · monolito modular]"]
+    subgraph API ["API QuillaCoin [Contenedor: Node.js + Express · monolito modular]"]
         APIRest["API REST<br/>[Componente: rutas + middlewares]<br/>Expone /api/v1, autentica JWT<br/>y valida la entrada"]
 
         subgraph Modulos ["Módulos de negocio"]
@@ -152,7 +152,7 @@ flowchart TB
 
 | # | Regla | Motivo |
 |---|---|---|
-| 1 | Todos los componentes se despliegan juntos en el contenedor API Flexcoin | Es un monolito: un solo proceso y un solo despliegue |
+| 1 | Todos los componentes se despliegan juntos en el contenedor API QuillaCoin | Es un monolito: un solo proceso y un solo despliegue |
 | 2 | Un módulo usa a otro solo a través de su API pública (`index.ts`) | Evita que un cambio interno en un módulo rompa a los demás |
 | 3 | Un módulo no lee ni escribe las tablas de otro módulo | Mantiene la independencia de los datos de cada módulo |
 | 4 | Cada sistema externo se integra en un único módulo | La integración queda en un solo lugar y es fácil de reemplazar |

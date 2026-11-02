@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Definir el estilo arquitectónico del sistema Flexcoin y representar su estructura global mediante un diagrama que muestre los principales componentes y sus relaciones.
+Definir el estilo arquitectónico del sistema QuillaCoin y representar su estructura global mediante un diagrama que muestre los principales componentes y sus relaciones.
 
 ---
 
