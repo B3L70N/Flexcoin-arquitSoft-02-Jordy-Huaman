@@ -1,20 +1,20 @@
 # Nivel 4 · Diagrama de código
 
-> **Proyecto:** QuillaCoin · **Módulos detallados:** Transferencias y Control de concurrencia<br>
+> **Proyecto:** QuillaCoin · **Módulo detallado:** Transferencias internas<br>
 > **Modelo:** C4 · Nivel 4 de 4 · **Notación:** UML · **Versión:** 1.0
 
 ---
 
 ## 1. Objetivo
 
-Mostrar **cómo está organizado el código** de un componente del nivel 3: sus clases, interfaces y la forma en que colaboran. Se detalla el flujo **Transferir criptomonedas**, que involucra a los módulos **Transferencias** y **Control de concurrencia**, y a la integración con el proveedor de criptomonedas y la red blockchain.
+Mostrar una propuesta de organización para el flujo **Transferir internamente activos entre usuarios**. Esta operación solo cambia el libro de saldos de QuillaCoin. Los retiros externos son otro flujo: se registran con estados y se solicitan al proveedor custodial.
 
 | Aspecto | Descripción |
 |---|---|
 | Pregunta que responde | ¿Qué clases existen dentro de un módulo y cómo se relacionan? |
 | Audiencia | Desarrolladores |
 | Notación | UML (diagrama de clases y diagrama de secuencia). El modelo C4 recomienda UML para este nivel |
-| Por qué estos dos módulos | El nivel 4 se dibuja para los componentes más importantes o complejos. Transferencias y Control de concurrencia concentran las reglas críticas de QuillaCoin y las integraciones externas |
+| Alcance del diagrama | Transferencia interna en una transacción del almacenamiento autoritativo; no incluye llamadas al proveedor ni a la blockchain |
 | Nivel anterior | `Nivel3-Diagrama-de-Componentes.md` |
 
 ---
@@ -31,10 +31,7 @@ classDiagram
 
     class TransferirCriptomonedasUseCase {
         - transferenciaRepo: TransferenciaRepository
-        - controlConcurrencia: ControlConcurrenciaUseCase
-        - criptoPort: CriptoPort
-        - blockchainPort: BlockchainPort
-        + ejecutar(cmd): Promise~string~
+        + ejecutar(cmd): Promise~ResultadoTransferencia~
     }
 
     class Transferencia {
@@ -43,102 +40,49 @@ classDiagram
         - destinoId: string
         - monto: MontoTransferencia
         - estado: EstadoTransferencia
-        - hashBlockchain: string
         + crear(origenId, destinoId, monto): Transferencia
-        + marcarConfirmada(hash): void
-        + marcarRechazada(motivo): void
+        + validar(): void
     }
 
     class MontoTransferencia {
-        + valor: number
-        + criptomoneda: string
+        + unidadesMinimas: bigint
+        + activo: string
         + validar(): void
     }
 
     class EstadoTransferencia {
         <<enumeration>>
-        PENDIENTE
-        CONFIRMADA
+        COMPLETADA
         RECHAZADA
-        CANCELADA
     }
 
     class TransferenciaRepository {
         <<interface>>
-        + guardar(transferencia): Promise~void~
-        + buscarPorId(id): Promise~Transferencia~
-    }
-
-    class CriptoPort {
-        <<interface>>
-        + transferir(origen, destino, monto): Promise~ResultadoTransferencia~
-    }
-
-    class BlockchainPort {
-        <<interface>>
-        + registrarTransaccion(transferencia): Promise~string~
+        + registrarAtomica(transferencia, claveIdempotencia): Promise~ResultadoTransferencia~
+        + buscarPorClaveIdempotencia(clave): Promise~ResultadoTransferencia~
     }
 
     class ResultadoTransferencia {
         + exitoso: boolean
-        + hashOperacion: string
-        + motivoRechazo: string
+        + transferenciaId: string
+        + motivoRechazo?: string
     }
 
-    class PostgresTransferenciaRepository {
-        - db: Pool
-        + guardar(transferencia): Promise~void~
-        + buscarPorId(id): Promise~Transferencia~
-    }
-
-    class BinanceCriptoAdapter {
-        - cliente: SDK
-        + transferir(origen, destino, monto): Promise~ResultadoTransferencia~
-    }
-
-    class BlockchainAdapter {
-        - cliente: SDK
-        + registrarTransaccion(transferencia): Promise~string~
-    }
-
-    %% MÓDULO CONTROL DE CONCURRENCIA
-    class ControlConcurrenciaUseCase {
-        <<API pública del módulo>>
-        - controlPort: ControlConcurrenciaPort
-        + solicitarBloqueo(recursoId, monto): Promise~void~
-        + liberarBloqueo(recursoId): Promise~void~
-    }
-
-    class ControlConcurrenciaPort {
-        <<interface>>
-        + bloquear(recursoId): Promise~void~
-        + liberar(recursoId): Promise~void~
-    }
-
-    class InMemoryLockAdapter {
-        - bloqueados: Map
-        + bloquear(recursoId): Promise~void~
-        + liberar(recursoId): Promise~void~
+    class RepositorioTransaccionalLibroAdapter {
+        - almacenamiento: Transaccional
+        + registrarAtomica(transferencia, claveIdempotencia): Promise~ResultadoTransferencia~
+        + buscarPorClaveIdempotencia(clave): Promise~ResultadoTransferencia~
     }
 
     %% RELACIONES
     TransferenciaController --> TransferirCriptomonedasUseCase : usa
     TransferirCriptomonedasUseCase ..> Transferencia : crea
     TransferirCriptomonedasUseCase --> TransferenciaRepository : usa
-    TransferirCriptomonedasUseCase --> CriptoPort : usa
-    TransferirCriptomonedasUseCase --> BlockchainPort : usa
-    TransferirCriptomonedasUseCase --> ControlConcurrenciaUseCase : usa API pública
-
     Transferencia *-- MontoTransferencia
     Transferencia --> EstadoTransferencia
 
-    PostgresTransferenciaRepository ..|> TransferenciaRepository
-    BinanceCriptoAdapter ..|> CriptoPort
-    BlockchainAdapter ..|> BlockchainPort
-    CriptoPort ..> ResultadoTransferencia : retorna
-
-    ControlConcurrenciaUseCase --> ControlConcurrenciaPort : usa
-    InMemoryLockAdapter ..|> ControlConcurrenciaPort
+    RepositorioTransaccionalLibroAdapter ..|> TransferenciaRepository
+    TransferenciaRepository ..> ResultadoTransferencia : retorna
 ```
 
 ### 2.1 Capas de Clean Architecture
@@ -157,24 +101,14 @@ classDiagram
 | Clase | Tipo | Capa | Responsabilidad |
 |---|---|---|---|
 | `TransferenciaController` | Controlador | Presentación | Recibe `POST /api/v1/transferencias` y responde al cliente |
-| `TransferirCriptomonedasUseCase` | Caso de uso | Aplicación | Crea la transferencia, solicita el bloqueo, ejecuta el envío de criptos, registra on-chain y guarda |
-| `Transferencia` | Entidad | Dominio | Valida la transferencia, controla sus estados y guarda el hash de la blockchain |
+| `TransferirCriptomonedasUseCase` | Caso de uso | Aplicación | Valida la solicitud y coordina el registro atómico de los dos movimientos internos |
+| `Transferencia` | Entidad | Dominio | Valida origen, destino y monto de la transferencia interna |
 | `MontoTransferencia` | Objeto de valor | Dominio | Monto y criptomoneda con validación propia |
-| `EstadoTransferencia` | Enumeración | Dominio | PENDIENTE, CONFIRMADA, RECHAZADA, CANCELADA |
-| `TransferenciaRepository` | Interfaz | Dominio | Contrato para guardar y buscar transferencias |
-| `CriptoPort` | Interfaz | Dominio | Contrato para ejecutar la transferencia en el proveedor de criptomonedas |
-| `BlockchainPort` | Interfaz | Dominio | Contrato para registrar la transacción on-chain |
-| `PostgresTransferenciaRepository` | Repositorio | Infraestructura | Implementa `TransferenciaRepository` con PostgreSQL |
-| `BinanceCriptoAdapter` | Adaptador | Infraestructura | Implementa `CriptoPort` llamando a la API del proveedor |
-| `BlockchainAdapter` | Adaptador | Infraestructura | Implementa `BlockchainPort` enviando la transacción a la red |
+| `EstadoTransferencia` | Enumeración | Dominio | COMPLETADA o RECHAZADA; la operación interna se confirma dentro de una transacción |
+| `TransferenciaRepository` | Interfaz | Aplicación/Dominio | Contrato para aplicar el débito, el crédito y el registro en una transacción, con idempotencia |
+| `RepositorioTransaccionalLibroAdapter` | Repositorio | Infraestructura | Implementa el contrato usando el almacenamiento transaccional seleccionado, aún por definir |
 
-### 2.3 Clases del módulo Control de concurrencia
-
-| Clase | Tipo | Capa | Responsabilidad |
-|---|---|---|---|
-| `ControlConcurrenciaUseCase` | Caso de uso (API pública) | Aplicación | Único punto por el que otros módulos solicitan bloqueo sobre un saldo |
-| `ControlConcurrenciaPort` | Interfaz | Dominio | Contrato para bloquear y liberar un recurso |
-| `InMemoryLockAdapter` | Adaptador | Infraestructura | Implementa el bloqueo en memoria dentro del proceso del monolito |
+La garantía de concurrencia proviene de la operación atómica del almacenamiento autoritativo, no de un bloqueo en memoria. El mecanismo concreto dependerá de la base de datos seleccionada y deberá probarse bajo carga concurrente.
 
 ### 2.4 Notación UML utilizada
 
@@ -182,14 +116,14 @@ classDiagram
 |---|---|---|
 | Línea continua con flecha abierta | Asociación: la clase tiene una referencia a la otra | `TransferirCriptomonedasUseCase` → `TransferenciaRepository` |
 | Línea discontinua con flecha abierta | Dependencia: la usa o la crea | `TransferirCriptomonedasUseCase` «crea» `Transferencia` |
-| Línea discontinua con triángulo hueco | Realización: implementa una interfaz | `PostgresTransferenciaRepository` ▷ `TransferenciaRepository` |
+| Línea discontinua con triángulo hueco | Realización: implementa una interfaz | `RepositorioTransaccionalLibroAdapter` ▷ `TransferenciaRepository` |
 | Rombo relleno | Composición: la parte no existe sin el todo | `Transferencia` ◆ `MontoTransferencia` |
-| Nombre en cursiva con «interface» | Interfaz | `CriptoPort`, `BlockchainPort` |
-| `-` y `+` | Atributo o método privado y público | `- estado`, `+ marcarConfirmada()` |
+| Nombre en cursiva con «interface» | Interfaz | `TransferenciaRepository` |
+| `-` y `+` | Atributo o método privado y público | `- estado`, `+ validar()` |
 
 ---
 
-## 3. Diagrama de secuencia: transferir criptomonedas
+## 3. Diagrama de secuencia: transferencia interna
 
 ```mermaid
 sequenceDiagram
@@ -198,63 +132,44 @@ sequenceDiagram
     participant TC as TransferenciaController
     participant UC as TransferirCriptomonedasUseCase
     participant T as Transferencia
-    participant CC as ControlConcurrenciaUseCase
-    participant CP as CriptoPort
-    participant BP as BlockchainPort
     participant TR as TransferenciaRepository
-    participant Ext as Proveedor cripto
-    participant BC as Red blockchain
-    participant DB as PostgreSQL
+    participant DB as Almacenamiento transaccional
 
-    CW->>TC: POST /api/v1/transferencias {destinoId, monto, criptomoneda} + JWT
+    CW->>TC: POST /api/v1/transferencias {destinoId, monto, activo, claveIdempotencia} + JWT
     TC->>UC: ejecutar(cmd)
-    UC->>CC: solicitarBloqueo(origenId, monto)
-    CC-->>UC: bloqueo otorgado
     UC->>T: crear(origenId, destinoId, monto)
-    T-->>UC: transferencia [PENDIENTE]
-    UC->>CP: transferir(origen, destino, monto)
-    CP->>Ext: solicitud de transferencia HTTPS
-    Ext-->>CP: resultado
-    CP-->>UC: ResultadoTransferencia
-
-    alt transferencia exitosa
-        UC->>T: marcarConfirmada(hashOperacion)
-        UC->>BP: registrarTransaccion(transferencia)
-        BP->>BC: transacción on-chain
-        BC-->>BP: hash de bloque
-        BP-->>UC: hashBlockchain
-        UC->>TR: guardar(transferencia)
-        TR->>DB: INSERT transferencia SQL
-        DB-->>TR: ok
-        TR-->>UC: confirmado
-        UC->>CC: liberarBloqueo(origenId)
+    T-->>UC: transferencia validada
+    UC->>TR: registrarAtomica(transferencia, claveIdempotencia)
+    TR->>DB: BEGIN
+    TR->>DB: Validar fondos y clave idempotente
+    TR->>DB: Registrar débito, crédito y transferencia
+    alt fondos suficientes y solicitud nueva
+        TR->>DB: COMMIT
+        DB-->>TR: confirmado
+        TR-->>UC: transferencia completada
         UC-->>TC: transferenciaId
         TC-->>CW: 201 Created
-    else transferencia rechazada
-        UC->>T: marcarRechazada(motivo)
-        UC->>CC: liberarBloqueo(origenId)
-        UC-->>TC: lanza TransferenciaRechazadaError
-        Note over UC,TC: La transferencia no se guarda<br/>El controlador traduce la excepción a HTTP
-        TC-->>CW: 409 Conflict con motivo
+    else fondos insuficientes o solicitud duplicada
+        TR->>DB: ROLLBACK o devolver resultado previo
+        DB-->>TR: sin movimiento parcial
+        TR-->>UC: rechazo o resultado idempotente
+        UC-->>TC: resultado
+        TC-->>CW: 409 Conflict o respuesta previamente registrada
     end
 ```
 
 | Paso | Origen a destino | Acción |
 |---|---|---|
-| 1 | Cliente web a `TransferenciaController` | Envía `POST /api/v1/transferencias` con destino, monto, criptomoneda y JWT |
-| 2 | `TransferenciaController` a `TransferirCriptomonedasUseCase` | Ejecuta el caso de uso |
-| 3 | Caso de uso a `ControlConcurrenciaUseCase` | Solicita bloqueo del saldo de origen |
-| 4 | Caso de uso a `Transferencia` | Crea la transferencia en estado PENDIENTE |
-| 5 | Caso de uso a `CriptoPort` | Solicita la transferencia al proveedor |
-| 6 | `BinanceCriptoAdapter` a proveedor externo | Envía la solicitud por HTTPS |
-| 7 | Caso de uso a `Transferencia` | Si fue exitosa, la marca como CONFIRMADA |
-| 8 | Caso de uso a `BlockchainPort` | Registra la transacción on-chain |
-| 9 | `BlockchainAdapter` a red blockchain | Envía la transacción a la red |
-| 10 | Caso de uso a `TransferenciaRepository` | Guarda la transferencia |
-| 11 | `PostgresTransferenciaRepository` a PostgreSQL | Ejecuta el `INSERT` |
-| 12 | Caso de uso a `ControlConcurrenciaUseCase` | Libera el bloqueo del saldo |
-| 13 | `TransferenciaController` a cliente web | Responde `201 Created` con el identificador |
-| 14 | Alternativa | Si la transferencia es rechazada, se libera el bloqueo, no se guarda y se responde `409 Conflict` |
+| 1 | Cliente web a `TransferenciaController` | Envía destino, monto, activo, clave de idempotencia y JWT |
+| 2 | `TransferenciaController` a `TransferirCriptomonedasUseCase` | Ejecuta el caso de uso con la identidad tomada de la sesión autenticada |
+| 3 | Caso de uso a `Transferencia` | Valida origen, destino y monto |
+| 4 | Caso de uso a `TransferenciaRepository` | Solicita el débito, el crédito y el registro como una operación atómica |
+| 5 | Repositorio a almacenamiento transaccional | Comprueba fondos e idempotencia; aplica ambos movimientos y confirma juntos |
+| 6 | Alternativa | Si no hay fondos suficientes, revierte todo; si la clave ya existe, devuelve el resultado previo sin duplicar movimientos |
+| 7 | Caso de uso a `TransferenciaController` | Devuelve el resultado confirmado o el rechazo de fondos |
+| 8 | `TransferenciaController` a cliente web | Responde con el identificador y el estado de la transferencia interna |
+
+El proveedor custodial y la blockchain **no participan** en esta secuencia. Un retiro externo es un caso de uso distinto, inicialmente simulado, que guarda su estado antes de consultar al proveedor y reconcilia respuestas posteriores.
 
 ---
 
@@ -262,11 +177,9 @@ sequenceDiagram
 
 | Elemento del diagrama | Patrón o principio |
 |---|---|
-| `BinanceCriptoAdapter`, `BlockchainAdapter` | Patrón **Adapter** |
-| `TransferenciaRepository` y `PostgresTransferenciaRepository` | Patrón **Repository** |
-| `InMemoryLockAdapter` | Patrón **Strategy** aplicado al bloqueo (permite reemplazar la estrategia por Redis en el futuro) |
+| `TransferenciaRepository` y `RepositorioTransaccionalLibroAdapter` | Patrones **Repository** y **Adapter** |
 | El caso de uso recibe interfaces, no clases concretas | Principio de **inversión de dependencias** (SOLID) |
 | Una clase por responsabilidad (controlador, caso de uso, entidad, repositorio) | Principio de **responsabilidad única** (SOLID) |
-| Transferencias usa a Control de concurrencia solo mediante `ControlConcurrenciaUseCase` | Regla del **monolito modular**: comunicación por la API pública del módulo |
+| El repositorio persiste ambos lados del movimiento en una transacción | Consistencia del libro y prevención de transferencias parciales |
 
 > Detalle completo en `03-diseño-de-software/diseño-interno/patrones-de-diseño.md` y `principios-de-diseño.md`.

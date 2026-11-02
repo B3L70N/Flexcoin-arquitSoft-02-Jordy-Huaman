@@ -8,7 +8,7 @@ Documentar cómo se aplican los principios SOLID en el backend de QuillaCoin, or
 
 - **Estilo:** monolito modular (Node.js + Express).
 - **Enfoque interno:** Clean Architecture (presentación, aplicación, dominio, infraestructura).
-- **Módulo de referencia:** Transferencias, porque integra base de datos, proveedor de criptomonedas y red blockchain.
+- **Módulo de referencia:** Transferencias internas, porque debe mantener consistente el libro sin depender de servicios externos.
 
 ## SOLID en el módulo Transferencias
 
@@ -25,29 +25,19 @@ flowchart TB
     subgraph Dom ["DOMINIO"]
         Ent["«entity»<br/>Transferencia<br/>[S]"]
         IRep["«interface»<br/>TransferenciaRepository<br/>[I]"]
-        ICrip["«interface»<br/>CriptoPort<br/>[I]"]
-        IBlock["«interface»<br/>BlockchainPort<br/>[I]"]
     end
 
     subgraph Inf ["INFRAESTRUCTURA"]
-        RepPg["PostgresTransferenciaRepository<br/>[S]"]
-        AdBinance["BinanceCriptoAdapter<br/>[O][L]"]
-        AdSim["CriptoSimuladoAdapter<br/>[O][L]"]
-        AdBlock["BlockchainAdapter<br/>[O]"]
+        RepTx["RepositorioTransaccionalLibro<br/>[S]"]
     end
 
-    Comp["transferencias.module.ts<br/>Crea los adaptadores y los inyecta en el caso de uso<br/>[D]"]
+    Comp["transferencias.module.ts<br/>Inyecta el repositorio transaccional<br/>[D]"]
 
     TC -->|"crea"| UC
     UC -->|"crea"| Ent
     UC --> IRep
-    UC --> ICrip
-    UC --> IBlock
 
-    RepPg -.->|"implementa"| IRep
-    AdBinance -.->|"implementa"| ICrip
-    AdSim -.->|"implementa"| ICrip
-    AdBlock -.->|"implementa"| IBlock
+    RepTx -.->|"implementa"| IRep
 
     Comp -.->|"inyecta"| UC
 
@@ -62,7 +52,7 @@ flowchart TB
 
 - **[S]** Responsabilidad única: una sola tarea por clase
 - **[O]** Abierto/cerrado: nuevo proveedor = nueva clase
-- **[L]** Liskov: Binance y el simulado son intercambiables
+- **[L]** Liskov: implementaciones del repositorio respetan el mismo contrato
 - **[I]** Segregación: interfaces pequeñas por necesidad
 - **[D]** Inversión: el caso de uso depende de interfaces
 
@@ -70,26 +60,26 @@ flowchart TB
 
 | Principio | Dónde se aplica | Cómo se cumple en QuillaCoin | Archivos |
 |---|---|---|---|
-| **S** · Responsabilidad única | Todas las capas | Cada clase tiene una sola tarea: el controlador recibe la petición HTTP, el caso de uso coordina la transferencia, la entidad aplica las reglas del dominio y el repositorio guarda en PostgreSQL | `transferencia.controller.ts`, `transferir-criptomonedas.use-case.ts`, `transferencia.ts`, `postgres-transferencia-repository.ts` |
-| **O** · Abierto/cerrado | Infraestructura | Para agregar un nuevo proveedor de criptomonedas se crea un nuevo adaptador; el caso de uso de transferencia no se modifica | `binance-cripto.adapter.ts`, `cripto-simulado.adapter.ts` |
-| **L** · Sustitución de Liskov | Infraestructura | Binance y el simulado devuelven el mismo `ResultadoTransferencia`; el caso de uso funciona igual con cualquiera | `binance-cripto.adapter.ts`, `cripto-simulado.adapter.ts` |
-| **I** · Segregación de interfaces | Dominio | Cada interfaz tiene solo lo que Transferencias necesita: `CriptoPort` solo transfiere, `BlockchainPort` solo registra on-chain, `TransferenciaRepository` solo guarda y busca transferencias | `cripto-port.ts`, `blockchain-port.ts`, `transferencia-repository.ts` |
-| **D** · Inversión de dependencias | Aplicación | El caso de uso recibe interfaces por el constructor y no conoce Binance, PostgreSQL ni la red blockchain; las implementaciones se conectan en `transferencias.module.ts` | `transferir-criptomonedas.use-case.ts`, `transferencias.module.ts` |
+| **S** · Responsabilidad única | Todas las capas | El controlador traduce HTTP, el caso de uso coordina, la entidad valida reglas y el repositorio registra atómicamente los movimientos | Archivos del módulo por definir |
+| **O** · Abierto/cerrado | Infraestructura | La tecnología de persistencia se intercambia mediante una implementación del contrato transaccional, sin trasladar reglas al proveedor | Repositorio y adaptadores por definir |
+| **L** · Sustitución de Liskov | Infraestructura | Las implementaciones reales y simuladas de persistencia o de servicios externos respetan sus contratos | Adaptadores por definir |
+| **I** · Segregación de interfaces | Dominio/Aplicación | Transferencias internas depende del contrato del libro; pagos y retiros usan puertos separados para proveedores | Puertos por definir |
+| **D** · Inversión de dependencias | Aplicación | El caso de uso depende del contrato transaccional y no de la base de datos ni de proveedores concretos | Módulos y adaptadores por definir |
 
 ## Qué pasaría sin SOLID en QuillaCoin
 
 | Situación real | Sin SOLID | Con SOLID |
 |---|---|---|
-| Se cambia Binance por otro proveedor de criptomonedas | Hay que modificar el caso de uso de transferencia | Solo se crea un nuevo adaptador |
-| Se cambia la red blockchain | Se modifica el código del módulo Transferencias | Solo se reemplaza `BlockchainAdapter` |
-| Se quiere probar la transferencia | Se necesita PostgreSQL, Binance y la blockchain real | Se prueba con implementaciones en memoria o simuladas |
-| Cambia una regla del control de concurrencia | Hay que buscarla en controladores y servicios | Está solo en la entidad `Transferencia` y en el servicio de dominio |
+| Se cambia el proveedor custodial | Se modifica el caso de uso de transferencia | Solo se reemplaza el adaptador usado por compras o retiros |
+| Se cambia la base de datos | Se dispersa SQL por las reglas del negocio | Se reemplaza la implementación del repositorio transaccional |
+| Se quiere probar una transferencia interna | Se necesita un proveedor y una blockchain reales | Se prueba con una base transaccional de prueba y servicios externos simulados/no requeridos |
+| Cambia una regla de consistencia | Hay que buscarla en controladores y servicios | Se mantiene en las reglas del dominio y el contrato transaccional |
 
 ## Relación con Clean Architecture y los patrones
 
 | Principio | Lo cumple en el proyecto |
 |---|---|
 | Responsabilidad única | La separación en capas de Clean Architecture |
-| Abierto/cerrado y Liskov | El patrón Adapter (proveedor de criptomonedas y blockchain) |
-| Segregación de interfaces | Los puertos del dominio (`CriptoPort`, `BlockchainPort`, `TransferenciaRepository`) |
+| Abierto/cerrado y Liskov | El patrón Adapter para proveedores externos y repositorios intercambiables |
+| Segregación de interfaces | Contratos separados para movimientos internos y servicios externos |
 | Inversión de dependencias | El patrón Repository y la regla de dependencia: las capas externas dependen del dominio |

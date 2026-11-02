@@ -18,25 +18,24 @@ flowchart TB
 
         subgraph Modulos ["Módulos de Negocio"]
             ModUsr["Usuarios<br/>[Componente: módulo]<br/>Registro, autenticación y roles"]
-            ModSal["Saldos<br/>[Componente: módulo]<br/>Consulta y actualización de saldos"]
+            ModSal["Saldos y libro<br/>[Componente: módulo]<br/>Libro interno autoritativo y consulta de saldos"]
             ModCom["Compras<br/>[Componente: módulo]<br/>Órdenes de compra y confirmación"]
-            ModTrans["Transferencias<br/>[Componente: módulo]<br/>Movimientos entre usuarios"]
-            ModOp["Operaciones<br/>[Componente: módulo]<br/>Historial, retiros y depósitos"]
-            ModConc["Control de concurrencia<br/>[Componente: módulo transversal]<br/>Bloqueo y serialización de saldos"]
+            ModTrans["Transferencias internas<br/>[Componente: módulo]<br/>Débito y crédito internos atómicos"]
+            ModOp["Operaciones<br/>[Componente: módulo]<br/>Historial, retiros externos y depósitos"]
+            ModConc["Integridad transaccional<br/>[Responsabilidad transversal]<br/>Consistencia aplicada por el almacenamiento"]
             ModPag["Pagos<br/>[Componente: módulo]<br/>Cobro mediante la pasarela"]
             ModNot["Notificaciones<br/>[Componente: módulo]<br/>Avisa estado de operaciones"]
         end
     end
 
     %% ============ ALMACENAMIENTO ============
-    Cache[("Caché<br/>[Contenedor: Redis]<br/>Saldos de consulta frecuente")]
-    DB[("Base de datos<br/>[Contenedor: PostgreSQL]<br/>Usuarios, saldos, operaciones y transferencias")]
+    Cache[("Caché<br/>[Contenedor: tecnología por definir]<br/>Vista temporal, no autoritativa")]
+    DB[("Base de datos transaccional<br/>[Contenedor: D1 o PostgreSQL, por evaluar]<br/>Libro interno y operaciones")]
 
     %% ============ SISTEMAS EXTERNOS ============
     subgraph Externos ["Sistemas Externos"]
         Pasarela["Pasarela de pago<br/>[Sistema externo]<br/>Procesa pagos"]
-        Proveedor["Proveedor de criptomonedas<br/>[Sistema externo]<br/>Adquiere, consulta y transfiere criptos"]
-        Blockchain["Red blockchain<br/>[Sistema externo]<br/>Valida y registra transacciones"]
+        Proveedor["Proveedor custodial<br/>[Sistema externo]<br/>Mantiene fondos agrupados y procesa retiros externos"]
     end
 
     %% ============ CONEXIONES ============
@@ -55,28 +54,28 @@ flowchart TB
     ModSal -->|Verifica fondos| ModCom
     ModSal -->|Verifica fondos| ModTrans
 
-    ModCom -->|Acredita criptomonedas| ModSal
+    ModCom -->|Registra crédito tras confirmar el flujo simulado| ModSal
     ModCom -->|Solicita cobro| ModPag
-    ModCom -->|Registra transacción on-chain HTTPS/REST| Blockchain
+    ModCom -->|Solicita adquisición de cripto| Proveedor
 
-    ModTrans -->|Actualiza saldos origen y destino| ModSal
-    ModTrans -->|Ejecuta transferencia HTTPS/REST| Proveedor
-    ModTrans -->|Registra transacción on-chain HTTPS/REST| Blockchain
+    ModTrans -->|Registra débito y crédito atómicos| ModSal
 
     ModOp -->|Consulta movimientos| ModSal
+    ModOp -->|Solicita retiro externo y consulta estado| Proveedor
 
-    ModSal -->|Solicita bloqueo| ModConc
-    ModCom -->|Solicita bloqueo| ModConc
-    ModTrans -->|Solicita bloqueo| ModConc
+    ModSal -->|Persiste el libro en una transacción| ModConc
+    ModCom -->|Acredita resultados en una transacción| ModConc
+    ModTrans -->|Mueve saldos en una transacción| ModConc
 
     ModPag -->|Cobra HTTPS/REST| Pasarela
 
     ModCom -->|Publica cambio de estado| ModNot
     ModTrans -->|Publica cambio de estado| ModNot
 
-    ModSal -->|Cachea saldos| Cache
+    ModSal -->|Actualiza vista de lectura derivada| Cache
 
-    Modulos -.->|Cada módulo lee y escribe sus tablas SQL| DB
+    ModSal -->|Mantiene el libro en transacciones| DB
+    Modulos -.->|Usan repositorios; Saldos es propietario del libro| DB
 
     %% ============ ESTILOS ============
     style Usuario fill:#1f3a93,stroke:#0d1e4c,color:#ffffff
@@ -95,5 +94,4 @@ flowchart TB
     style DB fill:#d5dbdb,stroke:#566573,color:#000000
     style Pasarela fill:#bdc3c7,stroke:#2c3e50,color:#000000
     style Proveedor fill:#bdc3c7,stroke:#2c3e50,color:#000000
-    style Blockchain fill:#bdc3c7,stroke:#2c3e50,color:#000000
 ```

@@ -41,13 +41,13 @@ El sistema se despliega como una aplicación única, pero internamente se organi
 | Módulo | Responsabilidad |
 |--------|-----------------|
 | 1. Usuarios | Registro, autenticación y gestión de roles. |
-| 2. Saldos | Consulta y actualización de los saldos de criptomonedas. |
+| 2. Saldos y libro | Mantiene los movimientos internos autoritativos y expone saldos derivados; el caché solo acelera lecturas. |
 | 3. Compras | Órdenes de compra y confirmación con la pasarela de pagos. |
-| 4. Transferencias | Movimientos de criptomonedas entre usuarios. |
-| 5. Operaciones | Historial, retiros y depósitos. |
+| 4. Transferencias | Movimientos contables atómicos entre usuarios; no llaman al proveedor ni a la blockchain. |
+| 5. Operaciones | Historial, retiros externos con estados y depósitos simulados en la primera fase. |
 | 6. Pagos | Cobro mediante la pasarela de pago. |
 | 7. Notificaciones | Avisos al usuario sobre el estado de sus operaciones. |
-| 8. Control de concurrencia | Bloqueo y serialización de las operaciones que modifican saldos (módulo transversal). |
+| 8. Integridad transaccional | Garantías de concurrencia aplicadas al libro por el almacenamiento autoritativo; no es un bloqueo en memoria. |
 
 ---
 
@@ -56,8 +56,8 @@ El sistema se despliega como una aplicación única, pero internamente se organi
 | Sistema | Propósito |
 |---------|-----------|
 | Pasarela de pagos | Procesar pagos para la compra de criptomonedas. |
-| Proveedor de criptomonedas | Adquirir, consultar y transferir criptomonedas reales. |
-| Red blockchain | Validar y registrar transacciones on-chain. |
+| Proveedor custodial de criptomonedas | Mantener fondos agrupados y procesar adquisiciones/retiros externos; en la fase académica se usa un adaptador simulado. |
+| Red blockchain | Liquidar retiros externos bajo responsabilidad del proveedor cuando corresponda; QuillaCoin no se integra directamente en la fase inicial. |
 | Servicio de notificaciones | Informar al usuario sobre el estado de sus operaciones. |
 
 ---
@@ -100,14 +100,14 @@ flowchart TD
     subgraph Dominio ["Dominio (núcleo)"]
         D1[Entidades y reglas de negocio]
         D2[Contratos e interfaces]
-        D3[Control de concurrencia]
+        D3[Reglas del libro de saldos]
     end
 
     subgraph Infraestructura ["Infraestructura (adaptadores)"]
         I1[Repositorios]
         I2[Procesador de pagos]
         I3[Proveedor de criptomonedas]
-        I4[Servicio de blockchain]
+        I4[Proveedor custodial para retiros]
         I5[Notificaciones]
     end
 
@@ -133,3 +133,4 @@ flowchart TD
     I3 -.->|implementa| D2
     I4 -.->|implementa| D2
     I5 -.->|implementa| D2
+```

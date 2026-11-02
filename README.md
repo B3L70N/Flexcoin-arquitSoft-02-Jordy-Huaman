@@ -18,6 +18,8 @@
 ## 📖 Descripción
 Proyecto académico de análisis y diseño arquitectónico de **QuillaCoin**.
 
+La primera fase se limita al mercado peruano y simula pagos y criptoactivos en sandbox/testnet. El modelo objetivo separa las transferencias internas del libro de los retiros externos a través de un proveedor custodial.
+
 ## 📋 Gestión del proyecto
 
 El avance del proyecto se organiza en un tablero de Trello con las etapas de backlog, sprint actual, en proceso, en revisión y terminado.

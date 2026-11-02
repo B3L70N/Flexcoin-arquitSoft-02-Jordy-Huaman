@@ -43,7 +43,7 @@ Esto garantiza que las reglas del negocio, especialmente el control de concurren
 |------|------------------------------|
 | Presentación | Interfaz Angular y API REST. Recibe las peticiones del usuario y las responde. |
 | Aplicación | Casos de uso como comprar criptomonedas, transferir saldos, consultar historial. Coordina las operaciones. |
-| Dominio | Entidades como Usuario, Saldo, Operación. Reglas de negocio como validar fondos, controlar concurrencia y evitar sobregiros. |
+| Dominio | Entidades como Usuario, Saldo y Operación; reglas como validar montos, origen/destino y fondos suficientes. |
 | Infraestructura | Implementaciones concretas de repositorios, adaptadores de pasarela de pagos, proveedor de criptomonedas y notificaciones. |
 
 ---
@@ -57,7 +57,7 @@ Esto garantiza que las reglas del negocio, especialmente el control de concurren
 | Compras | Aplicación | Orquestar compra de criptomonedas. |
 | Transferencias | Aplicación | Orquestar transferencias entre usuarios. |
 | Operaciones | Aplicación | Historial, retiros y depósitos. |
-| Control de concurrencia | Dominio | Reglas que evitan inconsistencias en los saldos. |
+| Integridad del libro | Dominio y persistencia | Las reglas de negocio se coordinan con una operación transaccional del almacenamiento autoritativo para evitar sobregiros y movimientos parciales. |
 
 ---
 
@@ -88,14 +88,14 @@ flowchart TD
     subgraph Dominio ["Dominio"]
         D1[Entidades y reglas de negocio]
         D2[Contratos e interfaces]
-        D3[Control de concurrencia]
+        D3[Reglas del libro de saldos]
     end
 
     subgraph Infraestructura ["Infraestructura"]
         I1[Repositorios]
         I2[Procesador de pagos]
         I3[Proveedor de criptomonedas]
-        I4[Servicio de blockchain]
+        I4[Proveedor custodial para retiros]
         I5[Notificaciones]
     end
 
@@ -131,7 +131,7 @@ Las flechas continuas representan invocación en tiempo de ejecución. Las flech
 
 ### Dominio aislado
 
-El dominio contiene las entidades y las reglas de negocio críticas, como el control de concurrencia para evitar inconsistencias en los saldos. No depende de Angular, Express, la base de datos, ni los SDK de Culqi, Binance o blockchain.
+El dominio contiene las reglas de negocio críticas, como validar transferencias y fondos. No depende de Angular, Express, la base de datos ni de proveedores concretos. La garantía de atomicidad y concurrencia se completa en el repositorio transaccional y el almacenamiento autoritativo; no se basa en bloqueos en memoria.
 
 ### Casos de uso en la capa de aplicación
 
@@ -139,7 +139,7 @@ Los casos de uso orquestan las operaciones del sistema. Por ejemplo, `ComprarCri
 
 ### Adaptadores intercambiables en infraestructura
 
-Los adaptadores implementan los contratos definidos en el dominio. Por ejemplo, `ProcesadorPagosCulqi` y `ProcesadorPagosSimulado` implementan `ProcesadorPagos`. Cambiar de proveedor implica agregar un nuevo adaptador, no tocar la lógica del negocio.
+Los adaptadores implementan contratos de aplicación para proveedores externos. La pasarela peruana y el proveedor custodial aún no se han seleccionado; durante la fase académica ambos se simulan. Cambiar de proveedor implica agregar un adaptador, no modificar las reglas del libro.
 
 ### Raíz de composición
 
@@ -150,6 +150,6 @@ El archivo `app.config.ts` es el único lugar donde se decide qué adaptador cum
 ## Beneficios del enfoque en QuillaCoin
 
 - **Pruebas sin infraestructura.** El dominio puede probarse sin navegador, sin base de datos y sin servicios externos.
-- **Cambio de proveedor sin dolor.** Cambiar de Culqi a Niubiz implica escribir un adaptador nuevo, no modificar la lógica de compras.
-- **Consistencia controlada.** El control de concurrencia vive en el dominio y no puede ser evadido por ningún adaptador.
+- **Cambio de proveedor sin dolor.** Sustituir la pasarela o el proveedor custodial implica escribir un adaptador nuevo, no modificar la lógica de compras o del libro.
+- **Consistencia controlada.** Transferencias internas aplican débito y crédito juntos en el libro autoritativo; no llaman al proveedor ni a la blockchain. Los retiros externos son otro flujo.
 - **Mantenibilidad real.** Cada capa tiene una responsabilidad clara, lo que reduce el acoplamiento y facilita la evolución del sistema.

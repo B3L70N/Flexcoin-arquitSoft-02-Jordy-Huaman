@@ -16,6 +16,7 @@ Integrar los elementos identificados y determinar cuáles influyen significativa
 | DA04 | El sistema debe integrarse con una pasarela de pagos y un proveedor de criptomonedas. | RC04 (Servicios externos) | Condiciona la comunicación con los servicios externos. |
 | DA05 | El sistema debe utilizar una API REST para la comunicación entre frontend y backend. | RC03 (API REST) | Define el mecanismo de comunicación entre las capas del sistema. |
 | DA06 | El sistema debe permitir modificar funcionalidades sin afectar innecesariamente otros módulos. | AC06 (Mantenibilidad) | Favorece una arquitectura en capas con bajo acoplamiento y responsabilidades bien definidas. |
+| DA07 | El libro interno de saldos debe mantenerse consistente con los movimientos y poder reconciliarse con el proveedor custodial. | RC08 (Modelo de saldos y custodia) | Define el registro autoritativo, los límites entre transferencias internas y retiros externos y el tratamiento de fallos de integración. |
 
 ---
 
@@ -24,7 +25,7 @@ Integrar los elementos identificados y determinar cuáles influyen significativa
 | Categoría | Drivers |
 |-----------|---------|
 | Atributos de calidad | DA01, DA02, DA03, DA06 |
-| Restricciones | DA04, DA05 |
+| Restricciones | DA04, DA05, DA07 |
 
 ---
 
@@ -38,6 +39,7 @@ Integrar los elementos identificados y determinar cuáles influyen significativa
 | DA04 Integración con servicios externos | Diseño de adaptadores para la pasarela de pagos y el proveedor de criptomonedas. |
 | DA05 API REST | Definición de contratos REST entre frontend y backend, con endpoints claros para cada operación. |
 | DA06 Mantenibilidad | Separación por capas y componentes con responsabilidades bien definidas, facilitando cambios sin afectar otras funcionalidades. |
+| DA07 Libro y custodia | Mantener un libro interno auditable; ejecutar transferencias internas de manera atómica y reconciliar retiros externos con estados del proveedor. El caché no determina saldos disponibles. |
 
 ---
 

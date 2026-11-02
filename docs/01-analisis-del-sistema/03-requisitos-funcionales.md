@@ -14,14 +14,14 @@ Identificar las funcionalidades que el sistema debe proporcionar a partir de las
 | RF02 | El sistema debe permitir consultar los saldos disponibles de criptomonedas asociados a la cuenta del usuario. |
 | RF03 | El sistema debe permitir iniciar operaciones de compra de criptomonedas mediante una pasarela de pagos integrada. |
 | RF04 | El sistema debe permitir acreditar criptomonedas en la cuenta del usuario tras confirmar el resultado de la compra. |
-| RF05 | El sistema debe permitir realizar transferencias de criptomonedas entre usuarios registrados. |
-| RF06 | El sistema debe controlar la concurrencia de las operaciones que modifican los saldos, evitando actualizaciones inconsistentes. |
+| RF05 | El sistema debe permitir transferir activos entre usuarios registrados mediante un débito y un crédito internos del libro de saldos, sin ejecutar un retiro al proveedor ni una transacción blockchain. |
+| RF06 | El sistema debe aplicar atómicamente los movimientos del libro de saldos y controlar la concurrencia, evitando sobregiros, duplicaciones y saldos inconsistentes. |
 | RF07 | El sistema debe permitir consultar el historial de operaciones y sus respectivos estados. |
 | RF08 | El sistema debe permitir registrar, actualizar y desactivar cuentas de usuario mediante las funciones administrativas autorizadas. |
 | RF09 | El sistema debe permitir consultar los registros de las operaciones realizadas para su supervisión administrativa. |
-| RF10 | El sistema debe permitir enviar notificaciones sobre el estado de las compras y transferencias realizadas. |
-| RF11 | El sistema debe permitir solicitar retiros de criptomonedas hacia direcciones externas compatibles. |
-| RF12 | El sistema debe permitir registrar y consultar los depósitos de criptomonedas recibidos, así como su estado de confirmación. |
+| RF10 | El sistema debe permitir enviar notificaciones sobre el estado de las compras, transferencias internas y retiros realizados. |
+| RF11 | El sistema debe permitir solicitar retiros idempotentes a direcciones externas compatibles a través del proveedor custodial y consultar sus estados hasta conocer el resultado. |
+| RF12 | El sistema debe permitir registrar y consultar depósitos externos y su estado de confirmación cuando esta integración esté disponible; en la fase académica, el flujo se simula. |
 
 ---
 

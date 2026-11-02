@@ -30,22 +30,21 @@ flowchart TB
 
         subgraph Modulos ["Módulos de negocio"]
             ModUsr["Usuarios<br/>[Componente: módulo]<br/>Registro, autenticación y roles"]
-            ModSal["Saldos<br/>[Componente: módulo]<br/>Consulta y actualización de saldos"]
+            ModSal["Saldos y libro<br/>[Componente: módulo]<br/>Libro interno autoritativo y consulta de saldos"]
             ModCom["Compras<br/>[Componente: módulo]<br/>Órdenes de compra y confirmación"]
-            ModTrans["Transferencias<br/>[Componente: módulo]<br/>Movimientos entre usuarios"]
-            ModOp["Operaciones<br/>[Componente: módulo]<br/>Historial, retiros y depósitos"]
-            ModConc["Control de concurrencia<br/>[Componente: módulo transversal]<br/>Bloqueo y serialización de saldos"]
+            ModTrans["Transferencias internas<br/>[Componente: módulo]<br/>Débito y crédito internos atómicos"]
+            ModOp["Operaciones<br/>[Componente: módulo]<br/>Historial, retiros externos y depósitos"]
+            ModConc["Integridad transaccional<br/>[Responsabilidad transversal]<br/>Consistencia aplicada por el almacenamiento"]
             ModPag["Pagos<br/>[Componente: módulo]<br/>Cobro mediante la pasarela"]
             ModNot["Notificaciones<br/>[Componente: módulo]<br/>Avisa estado de operaciones"]
         end
     end
 
-    Cache[("⚡ Caché<br/>[Contenedor: Redis]<br/>Saldos de consulta frecuente")]
-    DB[("🗄️ Base de datos<br/>[Contenedor: PostgreSQL]<br/>Usuarios, saldos, operaciones y transferencias")]
+    Cache[("⚡ Caché<br/>[Contenedor: tecnología por definir]<br/>Vista temporal, no autoritativa")]
+    DB[("🗄️ Base de datos transaccional<br/>[Contenedor: D1 o PostgreSQL, por evaluar]<br/>Libro interno y operaciones")]
 
-    Pasarela["💳 Pasarela de pago<br/>[Sistema externo]"]
-    Proveedor["🪙 Proveedor de criptomonedas<br/>[Sistema externo]"]
-    Blockchain["⛓️ Red blockchain<br/>[Sistema externo]"]
+    Pasarela["💳 Pasarela peruana<br/>[Sistema externo · por seleccionar]"]
+    Proveedor["🪙 Proveedor custodial<br/>[Sistema externo · sandbox/testnet en la fase académica]"]
 
     WebApp -->|Llama a la API HTTPS/JSON| APIRest
 
@@ -57,30 +56,30 @@ flowchart TB
 
     ModUsr -.->|Valida cuenta| ModSal
     ModSal -.->|Verifica fondos| ModCom
-    ModSal -.->|Verifica fondos| ModTrans
+    ModSal -.->|Verifica fondos antes del movimiento| ModTrans
 
-    ModCom -.->|Acredita criptomonedas| ModSal
+    ModCom -.->|Registra crédito tras confirmar el flujo simulado| ModSal
     ModCom -.->|Solicita cobro| ModPag
-    ModCom -.->|Registra on-chain| Blockchain
+    ModCom -.->|Solicita adquisición de cripto| Proveedor
 
-    ModTrans -.->|Actualiza saldos| ModSal
-    ModTrans -.->|Ejecuta transferencia| Proveedor
-    ModTrans -.->|Registra on-chain| Blockchain
+    ModTrans -->|Registra débito y crédito atómicos| ModSal
 
     ModOp -.->|Consulta movimientos| ModSal
+    ModOp -.->|Solicita retiro externo y consulta estado| Proveedor
 
-    ModSal -.->|Solicita bloqueo| ModConc
-    ModCom -.->|Solicita bloqueo| ModConc
-    ModTrans -.->|Solicita bloqueo| ModConc
+    ModSal -.->|Persiste el libro en una transacción| ModConc
+    ModCom -.->|Acredita resultados en una transacción| ModConc
+    ModTrans -.->|Mueve saldos en una transacción| ModConc
 
     ModPag -->|Cobra HTTPS/REST| Pasarela
 
     ModCom -.->|Publica cambio de estado| ModNot
     ModTrans -.->|Publica cambio de estado| ModNot
 
-    ModSal -->|Cachea saldos TCP| Cache
+    ModSal -->|Actualiza vista de lectura derivada| Cache
 
-    Modulos -.->|Cada módulo lee y escribe sus tablas SQL| DB
+    ModSal -->|Mantiene el libro en transacciones| DB
+    Modulos -.->|Usan sus repositorios; el libro es propiedad de Saldos| DB
 
     style WebApp fill:#2e86de,stroke:#1b4f72,color:#ffffff
     style APIRest fill:#5dade2,stroke:#1b4f72,color:#000000
@@ -96,7 +95,6 @@ flowchart TB
     style DB fill:#d5dbdb,stroke:#566573,color:#000000
     style Pasarela fill:#bdc3c7,stroke:#2c3e50,color:#000000
     style Proveedor fill:#bdc3c7,stroke:#2c3e50,color:#000000
-    style Blockchain fill:#bdc3c7,stroke:#2c3e50,color:#000000
 ```
 
 ---
@@ -107,11 +105,11 @@ flowchart TB
 |---|---|---|---|
 | **API REST** | Punto de entrada HTTP del contenedor | Rutas `/api/v1`, autenticación JWT, validación de la entrada, manejo de errores | `src/api/` |
 | **Usuarios** | Identidad y acceso | Registro, inicio de sesión, roles (usuario, administrador) | `src/modules/usuarios/` |
-| **Saldos** | Estado de las cuentas | Consulta y actualización de los saldos de criptomonedas | `src/modules/saldos/` |
+| **Saldos y libro** | Fuente de verdad de los saldos internos | Registra movimientos y expone saldos derivados del libro | `src/modules/saldos/` |
 | **Compras** | Adquisición de criptomonedas | Órdenes de compra y confirmación con la pasarela | `src/modules/compras/` |
-| **Transferencias** | Movimientos entre usuarios | Transferencias de criptomonedas entre cuentas | `src/modules/transferencias/` |
-| **Operaciones** | Historial y movimientos externos | Historial, retiros y depósitos | `src/modules/operaciones/` |
-| **Control de concurrencia** | Coordinación de saldos | Bloqueo y serialización de operaciones que modifican saldos | `src/modules/control-concurrencia/` |
+| **Transferencias** | Movimientos internos | Débito y crédito atómicos entre usuarios; no invoca proveedor ni blockchain | `src/modules/transferencias/` |
+| **Operaciones** | Historial y movimientos externos | Historial, retiros con estados y depósitos simulados en la fase académica | `src/modules/operaciones/` |
+| **Integridad transaccional** | Integridad del libro | Garantías de concurrencia y prevención de doble gasto mediante el almacenamiento autoritativo; no requiere un bloqueo en memoria | Responsabilidad transversal de Saldos y los repositorios |
 | **Pagos** | Cobros | Cobro mediante la pasarela de pago | `src/modules/pagos/` |
 | **Notificaciones** | Comunicación con el usuario | Avisar el estado de las operaciones | `src/modules/notificaciones/` |
 
@@ -124,14 +122,13 @@ flowchart TB
 | Aplicación web | API REST | Llama a la API | HTTPS/JSON |
 | API REST | Módulos de negocio | Invoca los casos de uso | Llamada en memoria |
 | Usuarios | Saldos | Valida la cuenta antes de operar | Llamada en memoria (API pública del módulo) |
-| Saldos | Compras | Verifica fondos disponibles | Llamada en memoria |
-| Saldos | Transferencias | Verifica fondos disponibles | Llamada en memoria |
-| Compras | Saldos | Acredita criptomonedas tras confirmar el cobro | Llamada en memoria |
+| Compras | Saldos | Acredita el resultado confirmado mediante el libro | Llamada en memoria |
 | Compras | Pagos | Solicita el cobro | Llamada en memoria |
-| Transferencias | Saldos | Actualiza saldos origen y destino | Llamada en memoria |
+| Transferencias internas | Saldos y libro | Registra atómicamente débito y crédito; rechaza fondos insuficientes | Caso de uso/repository transaccional |
 | Operaciones | Saldos | Consulta movimientos para el historial | Llamada en memoria |
-| Saldos, Compras, Transferencias | Control de concurrencia | Solicita bloqueo antes de modificar un saldo | Llamada en memoria |
-| Compras, Transferencias | Notificaciones | Publica el cambio de estado | Evento en memoria |
+| Operaciones | Proveedor custodial | Solicita retiros externos y reconcilia estados | HTTPS/REST |
+| Saldos, Compras, Transferencias | Integridad transaccional | Aplica las garantías de concurrencia del almacenamiento del libro | Transacción del repositorio |
+| Compras, Transferencias, Operaciones | Notificaciones | Publica cambios de estado | Evento en memoria o mecanismo por definir |
 
 ---
 
@@ -139,11 +136,13 @@ flowchart TB
 
 | Componente | Destino | Descripción | Protocolo | Patrón aplicado |
 |---|---|---|---|---|
-| Todos los módulos | Base de datos (PostgreSQL) | Cada módulo lee y escribe **solo sus propias tablas** | SQL | Repository |
-| Saldos | Caché (Redis) | Guarda y lee saldos en memoria | TCP | Decorator |
+| Módulo Saldos | Base de datos transaccional (producto por definir) | Es propietario del libro de saldos y registra movimientos atómicos | Protocolo del servicio seleccionado | Repository |
+| Módulos de negocio | Base de datos transaccional | Persisten sus datos mediante repositorios; no modifican directamente el libro de otro módulo | Protocolo del servicio seleccionado | Repository |
+| Saldos | Caché (tecnología por definir) | Mantiene vistas derivadas para lectura; nunca autoriza fondos ni registra movimientos | Protocolo del servicio seleccionado | Decorator |
 | Pagos | Pasarela de pago | Cobra | HTTPS/REST | Adapter |
-| Compras, Transferencias | Proveedor de criptomonedas | Ejecuta la operación sobre criptomonedas reales | HTTPS/REST | Adapter |
-| Compras, Transferencias | Red blockchain | Registra la transacción on-chain | HTTPS/REST | Adapter |
+| Compras | Proveedor custodial | Solicita adquisición/consulta de activos; simulado en la fase académica | HTTPS/REST | Adapter |
+| Operaciones | Proveedor custodial | Solicita retiros externos y consulta/reconcilia su estado | HTTPS/REST | Adapter |
+| Proveedor custodial | Red blockchain | Liquida retiros externos cuando corresponda | Según proveedor | Integración del proveedor |
 | Notificaciones | Servicio de notificaciones | Envía el aviso al usuario | HTTPS/REST | Adapter |
 
 ---

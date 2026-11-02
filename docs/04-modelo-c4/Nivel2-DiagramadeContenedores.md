@@ -27,15 +27,15 @@ flowchart TB
     Admin["👤 Administrador<br/>[Persona]"]
 
     subgraph QuillaCoin ["QuillaCoin [Sistema de software]"]
-        WebApp["🖥️ Aplicación web<br/>[Contenedor: SPA - Angular]<br/>Interfaz para usuarios y administradores"]
-        API["⚙️ API QuillaCoin<br/>[Contenedor: Node.js + Express]<br/>Monolito modular. Expone la API REST,<br/>aplica las reglas de negocio e integra los sistemas externos"]
-        DB[("🗄️ Base de datos<br/>[Contenedor: PostgreSQL]<br/>Usuarios, saldos, operaciones y transferencias")]
-        Cache[("⚡ Caché<br/>[Contenedor: Redis]<br/>Saldos de consulta frecuente en memoria")]
+        WebApp["🖥️ Aplicación web<br/>[Contenedor: servicio Cloudflare por definir]<br/>Interfaz para usuarios y administradores"]
+        API["⚙️ API QuillaCoin<br/>[Contenedor: runtime Cloudflare por validar]<br/>Monolito modular. Expone la API REST,<br/>mantiene el libro interno e integra servicios externos"]
+        DB[("🗄️ Base de datos transaccional<br/>[Contenedor: Cloudflare D1 o PostgreSQL administrado, por evaluar]<br/>Usuarios, libro de saldos y operaciones")]
+        Cache[("⚡ Caché<br/>[Tecnología compatible con Cloudflare, por definir]<br/>Vista temporal de lectura; no autoritativa")]
     end
 
     Pasarela["💳 Pasarela de pago<br/>[Sistema externo]<br/>Procesa los pagos"]
-    Proveedor["🪙 Proveedor de criptomonedas<br/>[Sistema externo]<br/>Adquiere, consulta y transfiere criptos"]
-    Blockchain["⛓️ Red blockchain<br/>[Sistema externo]<br/>Valida y registra transacciones on-chain"]
+    Proveedor["🪙 Proveedor custodial de criptomonedas<br/>[Sistema externo]<br/>Mantiene fondos agrupados y procesa retiros externos"]
+    Blockchain["⛓️ Red blockchain<br/>[Sistema externo del proveedor]<br/>Liquida retiros cuando corresponda"]
     Notif["🔔 Servicio de notificaciones<br/>[Sistema externo]<br/>Envía avisos al usuario"]
 
     Usuario -->|Usa HTTPS| WebApp
@@ -47,8 +47,8 @@ flowchart TB
     API -->|Lee y escribe en caché TCP| Cache
 
     API -->|Solicita cobros HTTPS/REST| Pasarela
-    API -->|Ejecuta transferencias HTTPS/REST| Proveedor
-    API -->|Registra transacciones on-chain HTTPS/REST| Blockchain
+    API -->|Consulta o solicita retiros HTTPS/REST| Proveedor
+    Proveedor -->|Liquida retiros cuando corresponda| Blockchain
     API -->|Envía notificaciones HTTPS/REST| Notif
 
     style Usuario fill:#1f3a93,stroke:#0d1e4c,color:#ffffff
@@ -69,10 +69,10 @@ flowchart TB
 
 | Contenedor | Tecnología | Responsabilidad | Datos que maneja |
 |---|---|---|---|
-| **Aplicación web** | SPA · Angular | Interfaz de operaciones para usuarios y panel de administración. Se ejecuta en el navegador | Ninguno persistente; solo el estado de la pantalla |
-| **API QuillaCoin** | Node.js + Express | Expone la API REST, aplica las reglas de negocio, controla la concurrencia e integra los sistemas externos. Es un **monolito modular**: un solo proceso con módulos internos | Ninguno propio; usa la base de datos y la caché |
-| **Base de datos** | PostgreSQL | Almacena de forma permanente la información del negocio | Usuarios, saldos, operaciones y transferencias |
-| **Caché** | Redis | Guarda en memoria los saldos más consultados para responder más rápido | Copia temporal de los saldos |
+| **Aplicación web** | Servicio de publicación de Cloudflare por definir | Interfaz de operaciones para usuarios y administradores | Ninguno persistente; solo el estado de la pantalla |
+| **API QuillaCoin** | Runtime de Cloudflare por validar | Expone la API REST, mantiene el libro interno, aplica las reglas del negocio e integra servicios externos. Es un **monolito modular** | Usa almacenamiento transaccional y caché |
+| **Base de datos** | Cloudflare D1 o PostgreSQL administrado; decisión pendiente | Almacena permanentemente el libro de saldos y los registros operativos. La opción debe demostrar garantías transaccionales adecuadas | Usuarios, movimientos contables, operaciones y estados externos |
+| **Caché** | Tecnología por definir dentro del entorno Cloudflare | Acelera consultas de lectura sin autorizar ni contabilizar movimientos | Vista temporal derivada; nunca es fuente de verdad del saldo |
 
 ---
 
@@ -82,11 +82,11 @@ flowchart TB
 |---|---|---|---|
 | Usuario, Administrador | Aplicación web | Usan la aplicación desde el navegador | HTTPS |
 | Aplicación web | API QuillaCoin | Llama a la API | HTTPS/JSON |
-| API QuillaCoin | Base de datos | Lee y escribe información | SQL sobre TCP |
-| API QuillaCoin | Caché | Lee y escribe los saldos en memoria | TCP |
+| API QuillaCoin | Base de datos | Lee y escribe el libro y las operaciones usando transacciones | Protocolo del servicio seleccionado |
+| API QuillaCoin | Caché | Lee y actualiza datos derivados para consultas | Protocolo del servicio seleccionado |
 | API QuillaCoin | Pasarela de pago | Solicita cobros | HTTPS/REST |
-| API QuillaCoin | Proveedor de criptomonedas | Ejecuta transferencias y consultas | HTTPS/REST |
-| API QuillaCoin | Red blockchain | Registra transacciones on-chain | HTTPS/REST |
+| API QuillaCoin | Proveedor custodial | Consulta información y solicita retiros externos; no interviene en las transferencias internas | HTTPS/REST |
+| Proveedor custodial | Red blockchain | Liquida retiros externos cuando corresponda | Protocolo del proveedor |
 | API QuillaCoin | Servicio de notificaciones | Envía avisos de estado | HTTPS/REST |
 
 ---
@@ -97,8 +97,9 @@ flowchart TB
 |---|---|---|
 | Un único contenedor de backend (monolito modular) | Microservicios | Equipo pequeño y plazo acotado; los módulos permiten separar servicios en el futuro si es necesario |
 | Frontend separado del backend (SPA + API REST) | Páginas generadas en el servidor | El frontend y el backend evolucionan y se despliegan de forma independiente |
-| PostgreSQL como base de datos | Base de datos NoSQL | Los saldos y las transferencias necesitan transacciones y consistencia |
-| Redis como caché de saldos | Consultar siempre la base de datos | Los saldos son lo más consultado; la caché reduce el tiempo de respuesta y la carga sobre PostgreSQL |
+| Despliegue en Cloudflare | Plataforma por seleccionar | Plataforma objetivo; el runtime y los servicios concretos se validarán por compatibilidad |
+| D1 o PostgreSQL administrado como base de datos | Decisión pendiente | Comparar soporte transaccional, consistencia, operación y compatibilidad con el runtime antes de elegir |
+| Caché derivada | Leer siempre desde el almacenamiento en cada consulta | Puede reducir carga y latencia; nunca decide fondos disponibles ni participa como fuente de verdad |
 | Solo la API se comunica con los sistemas externos | Llamar a la pasarela o al proveedor desde el navegador | Las credenciales de los proveedores quedan en el servidor y no se exponen al cliente |
 
 ---
@@ -109,5 +110,6 @@ flowchart TB
 |---|---|
 | Navegador → Aplicación web y API | Tráfico cifrado con HTTPS |
 | Aplicación web → API | Autenticación con token JWT en cada petición |
-| API → Base de datos y caché | Acceso solo desde la red interna; credenciales en variables de entorno |
-| API → Sistemas externos | Credenciales de cada proveedor guardadas solo en el servidor |
+| API → Base de datos y caché | Usar los mecanismos de acceso y gestión de secretos del servicio seleccionado |
+| API → Sistemas externos | Credenciales del proveedor y la pasarela solo en el entorno servidor; comunicaciones HTTPS con TLS |
+| Administración del despliegue | SSH solo si la plataforma lo ofrece y se requiere; no sustituye HTTPS/TLS |

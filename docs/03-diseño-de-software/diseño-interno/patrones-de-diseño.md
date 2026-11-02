@@ -14,25 +14,23 @@ Documentar los patrones de diseño aplicados en el backend de QuillaCoin, indica
 
 | Patrón | Dónde se usa | Problema que resuelve | Se implementa con | Archivos en el código |
 |---|---|---|---|---|
-| Adapter | Compras y Transferencias → Pasarela de pagos | La pasarela tiene su propia API | SDK o API REST de la pasarela | `payment-port.js`, `culqi-payment.adapter.js` |
-| Adapter | Transferencias → Proveedor de criptomonedas | El proveedor tiene su propia API | API REST del proveedor (axios o fetch) | `cripto-port.js`, `binance-cripto.adapter.js` |
-| Adapter | Transferencias → Red blockchain | La red blockchain tiene su propio protocolo | SDK o API REST del nodo | `blockchain-port.js`, `blockchain.adapter.js` |
-| Repository | Todos los módulos → Base de datos | El negocio no debe conocer SQL | PostgreSQL (librería `pg` u ORM) | `transferencia-repository.js`, `postgres-transferencia-repository.js` |
-| Decorator | Saldos → Caché | Consultar saldos más rápido sin modificar el repositorio | Redis | `cached-saldo-repository.js` |
+| Adapter | Pagos y Operaciones → proveedores externos | Cada proveedor ofrece su propia API; los retiros externos no son transferencias internas | API REST/SDK del proveedor, inicialmente simulado | Puertos y adaptadores por definir |
+| Repository | Saldos y módulos → almacenamiento transaccional | Mantener el libro y las operaciones sin acoplar el dominio a la base de datos | Servicio compatible con Cloudflare, decisión pendiente | Repositorios transaccionales por definir |
+| Decorator | Saldos → Caché | Acelerar consultas con una vista derivada sin cambiar el origen autoritativo | Servicio compatible con Cloudflare, tecnología pendiente | Decorador de lectura por definir |
 
 ## Cómo funciona cada patrón
 
 | Patrón | En pocas palabras |
 |---|---|
-| Adapter | Traduce: el sistema dice `cobrar(monto)` y el adaptador lo convierte en la llamada propia de la pasarela, del proveedor de criptomonedas o de la blockchain. |
-| Repository | El negocio dice `guardar(transferencia)`; el repositorio escribe el SQL. |
-| Decorator | Busca primero en Redis; si no está, consulta PostgreSQL y lo guarda en Redis para la próxima vez. |
+| Adapter | Traduce las operaciones de compra o retiro externo al contrato de un proveedor. Las transferencias entre usuarios no llaman a ese adaptador. |
+| Repository | El caso de uso solicita registrar un movimiento; el repositorio aplica débito, crédito y transferencia atómicamente. |
+| Decorator | Puede servir una vista temporal de lectura; el saldo disponible siempre se valida contra el libro autoritativo. |
 
 ## Beneficio
 
-- Cambiar de pasarela, de proveedor de criptomonedas o de red blockchain solo afecta al adaptador correspondiente.
-- La caché con Redis se puede activar o retirar sin tocar las reglas de negocio.
-- El control de concurrencia queda aislado del acceso a datos gracias al patrón Repository.
+- Cambiar la pasarela o el proveedor custodial afecta a su adaptador, no a las transferencias internas.
+- La tecnología de caché se puede sustituir; no participa en la contabilización ni en la autorización de fondos.
+- La consistencia depende de registrar juntos los movimientos del libro en una transacción del almacenamiento elegido.
 
 ## Patrones previstos para siguientes iteraciones
 
@@ -41,4 +39,4 @@ Documentar los patrones de diseño aplicados en el backend de QuillaCoin, indica
 | Observer | Operaciones → Notificaciones | Al implementar las notificaciones de estado |
 | Factory | Compras → Transferencias | Si crear la operación se vuelve complejo por validaciones cruzadas |
 | Facade | Comunicación entre módulos | Cuando los módulos crezcan y necesiten una única puerta de entrada |
-| Singleton | Control de concurrencia | Si el servicio de bloqueo debe ser único en toda la aplicación |
+| Strategy | Adaptadores de pago y custodia | Cuando haya más de un proveedor que deba intercambiarse |

@@ -13,12 +13,12 @@ Describir las principales necesidades de los usuarios mediante el formato **Como
 | HU01 | Como usuario, quiero registrarme e iniciar sesión, para acceder a mi cuenta de forma autenticada. |
 | HU02 | Como usuario, quiero consultar mi saldo de criptomonedas, para conocer los fondos disponibles en mi cuenta. |
 | HU03 | Como usuario, quiero comprar criptomonedas mediante una pasarela de pagos, para disponer de activos digitales en mi cuenta. |
-| HU04 | Como usuario, quiero transferir criptomonedas a otro usuario, para realizar operaciones entre cuentas. |
+| HU04 | Como usuario, quiero transferir activos a otro usuario de QuillaCoin mediante un movimiento interno, para mover saldo entre cuentas sin realizar un retiro externo. |
 | HU05 | Como usuario, quiero consultar el historial de mis operaciones, para conocer los movimientos realizados y sus estados. |
 | HU06 | Como administrador, quiero gestionar las cuentas de los usuarios, para mantener el control de los usuarios registrados en la plataforma. |
 | HU07 | Como administrador, quiero consultar los registros de las operaciones, para supervisar las transacciones realizadas en el sistema. |
-| HU08 | Como usuario, quiero recibir notificaciones sobre el estado de mis operaciones, para conocer el resultado de mis compras y transferencias. |
-| HU09 | Como usuario, quiero retirar criptomonedas hacia una dirección externa compatible, para disponer de mis activos fuera de la plataforma. |
+| HU08 | Como usuario, quiero recibir notificaciones sobre el estado de mis operaciones, para conocer el resultado de mis compras, transferencias internas y retiros. |
+| HU09 | Como usuario, quiero solicitar un retiro a una dirección externa compatible, para disponer de mis activos fuera de la plataforma y consultar el estado informado por el proveedor. |
 | HU10 | Como usuario, quiero consultar el estado de mis depósitos de criptomonedas, para verificar cuándo se acreditan en mi cuenta. |
 
 ---

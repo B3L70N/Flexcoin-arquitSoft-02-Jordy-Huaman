@@ -8,10 +8,12 @@
 | **Fuente** | Usuario |
 | **Estímulo** | Varias transferencias intentan modificar simultáneamente un mismo saldo. |
 | **Condición** | El sistema opera normalmente con datos representativos. |
-| **Respuesta esperada** | El sistema controla las operaciones y evita saldos incorrectos o transferencias que excedan los fondos disponibles. |
-| **Medida** | El 100 % de las operaciones concurrentes sobre un mismo saldo mantiene la consistencia, sin sobregiros ni duplicaciones. |
-| **Verificación** | Ejecutar pruebas de concurrencia sobre un mismo saldo y revisar el resultado final. |
+| **Respuesta esperada** | El libro registra atómicamente el débito y el crédito de cada transferencia interna, rechaza operaciones sin fondos suficientes y evita duplicaciones. El proveedor no participa en este flujo. |
+| **Medida** | El 100 % de las solicitudes concurrentes de prueba mantiene el libro balanceado, sin sobregiros, movimientos duplicados ni transferencias parcialmente registradas. |
+| **Verificación** | Ejecutar pruebas concurrentes en el entorno simulado; comprobar el balance del libro, la unicidad de solicitudes y los saldos resultantes. |
 | **Estado** | Pendiente de definir el número de operaciones concurrentes de la prueba. |
+
+En contraste, los retiros externos son operaciones separadas: se registran con estados y solo se concilian con el proveedor cuando este informa su resultado.
 
 ## EQ-02. Rendimiento: consulta de saldos y transferencias
 

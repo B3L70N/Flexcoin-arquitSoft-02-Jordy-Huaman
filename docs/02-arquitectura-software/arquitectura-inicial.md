@@ -4,6 +4,8 @@
 
 Organizar los módulos identificados dentro de una primera propuesta de arquitectura, utilizando una arquitectura de tres capas.
 
+> **Nota de vigencia:** este documento conserva la propuesta inicial de capas. La distinción actual entre transferencias internas, retiros externos y el libro de saldos queda definida en ADR007 y en los diagramas C4 actualizados.
+
 ---
 
 ## Arquitectura de tres capas
@@ -18,7 +20,7 @@ flowchart TD
         N1[Usuarios]
         N2[Gestión de saldos]
         N3[Compras]
-        N4[Transferencias]
+        N4[Transferencias internas]
         N5[Depósitos]
         N6[Retiros]
         N7[Historial]
@@ -55,10 +57,8 @@ flowchart TD
 
     N3 --> E1
     N3 --> E2
-    N4 --> E2
-    N4 --> E3
     N6 --> E2
-    N6 --> E3
+    E2 --> E3
 ```
 
 ---
