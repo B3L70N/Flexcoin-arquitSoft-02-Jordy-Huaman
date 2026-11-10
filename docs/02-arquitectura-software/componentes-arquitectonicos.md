@@ -32,7 +32,7 @@ flowchart TB
     Worker["Worker de análisis de riesgo<br/>[Proceso separado]<br/>Consume outbox y crea alertas"]
     %% ============ ALMACENAMIENTO ============
     Cache[("Caché<br/>[Contenedor: tecnología por definir]<br/>Vista temporal, no autoritativa")]
-    DB[("Base de datos transaccional<br/>[Contenedor: almacenamiento por evaluar]<br/>Libro, operaciones, outbox y alertas")]
+    DB[("Base de datos transaccional<br/>[Contenedor: PostgreSQL; hosting por decidir]<br/>Libro, operaciones, outbox y alertas")]
 
     %% ============ SISTEMAS EXTERNOS ============
     subgraph Externos ["Sistemas Externos"]
@@ -76,7 +76,6 @@ flowchart TB
 
     ModCom -->|Publica cambio de estado| ModNot
     ModTrans -->|Publica cambio de estado| ModNot
-    ModTrans -->|Guarda evento de análisis en la misma transacción| DB
     Worker -->|Consume/reintenta eventos pendientes del outbox| DB
     Worker -->|Solicita análisis de señales minimizadas| IA
     Worker -->|Registra alertas no vinculantes| DB

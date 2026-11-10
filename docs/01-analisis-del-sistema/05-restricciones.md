@@ -18,7 +18,7 @@ Identificar las restricciones que condicionan las decisiones de diseño y arquit
 | RC06 | Ámbito geográfico | El alcance inicial se limita a usuarios y medios de pago disponibles en Perú; los pagos se expresan en soles peruanos (PEN). |
 | RC07 | Entorno académico | La primera fase usa sandbox o testnet y proveedores simulados; no procesa dinero ni criptoactivos reales. |
 | RC08 | Modelo de saldos y custodia | QuillaCoin mantiene el libro interno de saldos y el modelo objetivo agrupa los fondos en un proveedor custodial. La entidad proveedora y la viabilidad de producción están pendientes de validación. |
-| RC09 | Despliegue y persistencia | Cloudflare es la plataforma objetivo. El runtime, la base de datos y el caché deben seleccionarse tras verificar soporte transaccional, consistencia y compatibilidad. |
+| RC09 | Despliegue y persistencia | Cloudflare es el objetivo para DNS/CDN y protección perimetral. El hosting del backend y de PostgreSQL, así como el caché, quedan por definir considerando costos, operación y garantías transaccionales. PostgreSQL ya está seleccionado como motor. |
 | RC10 | Automatización | La integración y el despliegue continuo (CI/CD) deben automatizar las verificaciones y los despliegues acordados para cada entorno; la política de promoción a producción queda por definir. |
 | RC11 | Uso de IA | El proveedor de IA es opcional y debe integrarse desde el backend mediante contratos. Se minimizan y autorizan los datos enviados; el modelo no puede ejecutar operaciones financieras ni suspender cuentas. |
 
@@ -47,6 +47,6 @@ Identificar las restricciones que condicionan las decisiones de diseño y arquit
 | RC06 Ámbito geográfico | Limita el primer alcance a Perú y requiere evaluar medios de pago locales en PEN. |
 | RC07 Entorno académico | Exige separar simulación académica de cualquier futura operación con fondos reales. |
 | RC08 Modelo de saldos y custodia | Requiere mantener un libro interno consistente, integrar al proveedor mediante su API y validar antes de producción que su servicio admita el modelo agrupado. |
-| RC09 Despliegue y persistencia | Orienta el despliegue a Cloudflare, pero no predetermina una base de datos o caché hasta comprobar las garantías necesarias para el libro de saldos. |
+| RC09 Despliegue y persistencia | Separa Cloudflare como capa perimetral del hosting de Node.js y PostgreSQL; exige seleccionar servicios compatibles y preservar las garantías del libro. |
 | RC10 Automatización | Requiere pipeline CI/CD con verificaciones y despliegues automatizados, según una política de promoción aún por definir. |
 | RC11 Uso de IA | Requiere un adaptador sustituible, revisión de condiciones de tratamiento/retención del proveedor y separación entre sugerencias del modelo y decisiones administrativas. |

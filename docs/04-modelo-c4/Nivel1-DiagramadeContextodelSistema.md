@@ -112,7 +112,7 @@ flowchart TB
 | Operación con fondos reales | Validar proveedor, condiciones de custodia agrupada, capacidades de retiro, obligaciones aplicables en Perú y criterios antes de salir de sandbox/testnet |
 | Proveedores y activos | Seleccionar una pasarela disponible en Perú para pagos en PEN y los activos digitales compatibles; verificar tarifas, mínimos y condiciones |
 | Selección de activos | Elegir activos disponibles para el mercado peruano y el proveedor seleccionado, considerando liquidez, mínimos y comisiones de operación y retiro; el precio unitario no es el único criterio |
-| Base de datos y caché | Comparar alternativas compatibles con Cloudflare y validar transacciones, consistencia y soporte; el caché no será fuente de verdad |
+| Despliegue, base de datos y caché | PostgreSQL está elegido como motor; decidir hosting del backend y de la base, y tecnología de caché. Cloudflare como DNS/CDN/protección y el caché no serán fuente de verdad de saldos |
 | Despliegue CI/CD | Definir entornos, verificaciones y política de promoción; la automatización forma parte del alcance previsto |
 | IA y privacidad | Seleccionar proveedor, validar condiciones de tratamiento/retención, datos permitidos y metas del chat/análisis |
 | Revisión de alertas | Definir señales, niveles, responsables, procedimiento de revisión y retención de auditoría; la IA no bloquea cuentas |

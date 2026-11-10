@@ -10,12 +10,12 @@ Identificar las funcionalidades que el sistema debe proporcionar a partir de las
 
 | ID | Requisito funcional |
 |----|---------------------|
-| RF01 | El sistema debe permitir registrar usuarios e iniciar sesión mediante un mecanismo de autenticación. |
+| RF01 | El sistema debe permitir registrar usuarios e iniciar sesión con correo y contraseña; guardar contraseñas con hash Argon2id, emitir JWT de acceso de vida corta y renovar la sesión mediante refresh token rotatorio en cookie protegida. |
 | RF02 | El sistema debe permitir consultar los saldos disponibles de criptomonedas asociados a la cuenta del usuario. |
 | RF03 | El sistema debe permitir iniciar operaciones de compra de criptomonedas mediante una pasarela de pagos integrada. |
 | RF04 | El sistema debe permitir acreditar criptomonedas en la cuenta del usuario tras confirmar el resultado de la compra. |
-| RF05 | El sistema debe permitir transferir activos entre usuarios registrados mediante un débito y un crédito internos del libro de saldos, sin ejecutar un retiro al proveedor ni una transacción blockchain. |
-| RF06 | El sistema debe aplicar atómicamente los movimientos del libro de saldos y controlar la concurrencia, evitando sobregiros, duplicaciones y saldos inconsistentes. |
+| RF05 | El sistema debe permitir transferir activos entre usuarios activos mediante un débito y un crédito internos del libro de saldos, sin comisión inicial, auto-transferencia, proveedor custodial ni transacción blockchain. |
+| RF06 | El sistema debe aplicar atómicamente los movimientos del libro de doble partida y la actualización de saldos, controlar la concurrencia y soportar idempotencia, evitando sobregiros, duplicaciones y saldos inconsistentes. |
 | RF07 | El sistema debe permitir consultar el historial de operaciones y sus respectivos estados. |
 | RF08 | El sistema debe permitir registrar, actualizar y desactivar cuentas de usuario mediante las funciones administrativas autorizadas. |
 | RF09 | El sistema debe permitir consultar los registros de las operaciones realizadas para su supervisión administrativa. |

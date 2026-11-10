@@ -29,7 +29,7 @@ flowchart TB
     subgraph QuillaCoin ["QuillaCoin [Sistema de software]"]
         WebApp["🖥️ Aplicación web<br/>[Contenedor: servicio Cloudflare por definir]<br/>Interfaz para usuarios y administradores"]
         API["⚙️ API QuillaCoin<br/>[Contenedor: Node.js + Express, hosting por definir]<br/>Monolito modular. Expone API REST y chat,<br/>mantiene el libro e integra servicios"]
-        DB[("🗄️ Base de datos transaccional<br/>[Contenedor: tecnología por evaluar]<br/>Usuarios, libro, operaciones y outbox durable")]
+        DB[("🗄️ Base de datos transaccional<br/>[Contenedor: PostgreSQL; hosting por decidir]<br/>Usuarios, libro, operaciones y outbox durable")]
         Cache[("⚡ Caché<br/>[Tecnología compatible con Cloudflare, por definir]<br/>Vista temporal de lectura; no autoritativa")]
         Worker["🧠 Worker de análisis de riesgo<br/>[Proceso separado del API; tecnología por definir]<br/>Consume el outbox durable y analiza fuera de la ruta crítica"]
     end
@@ -77,7 +77,7 @@ flowchart TB
 |---|---|---|---|
 | **Aplicación web** | Servicio de publicación de Cloudflare por definir | Interfaz de operaciones para usuarios y administradores | Ninguno persistente; solo el estado de la pantalla |
 | **API QuillaCoin** | Node.js + Express; hosting por definir | Expone la API REST y el chat, mantiene el libro, aplica las reglas e integra servicios externos. Es un **monolito modular** | Usa almacenamiento transaccional y caché |
-| **Base de datos** | Cloudflare D1 o PostgreSQL administrado; decisión pendiente | Almacena permanentemente el libro de saldos y los registros operativos. La opción debe demostrar garantías transaccionales adecuadas | Usuarios, movimientos contables, operaciones y estados externos |
+| **Base de datos** | PostgreSQL; proveedor/hosting pendiente | Almacena permanentemente el libro inmutable, los saldos proyectados, las operaciones y el outbox | Usuarios, sesiones, movimientos contables, operaciones y estados externos |
 | **Caché** | Tecnología por definir dentro del entorno Cloudflare | Acelera consultas de lectura sin autorizar ni contabilizar movimientos | Vista temporal derivada; nunca es fuente de verdad del saldo |
 | **Worker de análisis de riesgo** | Proceso separado; runtime por definir | Consume y reintenta eventos pendientes del outbox, solicita análisis y registra alertas no vinculantes para revisión. No bloquea usuarios ni operaciones | Referencias a eventos, señales minimizadas y resultados auditables |
 
@@ -112,7 +112,7 @@ flowchart TB
 | Despliegue en Cloudflare | Plataforma por seleccionar | Plataforma objetivo; el runtime y los servicios concretos se validarán por compatibilidad |
 | IA fuera de la ruta crítica | Análisis síncrono antes de completar una transferencia | Evita que la demora o caída del modelo cambie el resultado del libro |
 | Outbox transaccional + worker | Publicación directa en memoria | Conserva los eventos junto con la operación confirmada y permite recuperación/reintentos; una cola externa podría añadirse si escala |
-| D1 o PostgreSQL administrado como base de datos | Decisión pendiente | Comparar soporte transaccional, consistencia, operación y compatibilidad con el runtime antes de elegir |
+| PostgreSQL como motor relacional | Elegir un motor sin capacidades relacionales/transaccionales adecuadas | Requerido para el libro de doble partida, restricciones únicas e idempotencia; el hosting se evaluará aparte |
 | Caché derivada | Leer siempre desde el almacenamiento en cada consulta | Puede reducir carga y latencia; nunca decide fondos disponibles ni participa como fuente de verdad |
 | Solo la API se comunica con los sistemas externos | Llamar a la pasarela o al proveedor desde el navegador | Las credenciales de los proveedores quedan en el servidor y no se exponen al cliente |
 

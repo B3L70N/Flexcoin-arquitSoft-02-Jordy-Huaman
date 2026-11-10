@@ -43,7 +43,7 @@ flowchart TB
 
     Worker["🧠 Worker de análisis de riesgo<br/>[Proceso separado; runtime por definir]<br/>Consume eventos y crea alertas revisables"]
     Cache[("⚡ Caché<br/>[Contenedor: tecnología por definir]<br/>Vista temporal, no autoritativa")]
-    DB[("🗄️ Base de datos transaccional<br/>[Contenedor: almacenamiento por evaluar]<br/>Libro, operaciones y outbox")]
+    DB[("🗄️ Base de datos transaccional<br/>[Contenedor: PostgreSQL; hosting por decidir]<br/>Libro, operaciones y outbox")]
 
     Pasarela["💳 Pasarela peruana<br/>[Sistema externo · por seleccionar]"]
     Proveedor["🪙 Proveedor custodial<br/>[Sistema externo · sandbox/testnet en la fase académica]"]
@@ -125,7 +125,7 @@ flowchart TB
 | **Pagos** | Cobros | Cobro mediante la pasarela de pago | `src/modules/pagos/` |
 | **Notificaciones** | Comunicación con el usuario | Avisar el estado de las operaciones | `src/modules/notificaciones/` |
 | **Asistencia conversacional** | Atención al usuario | Responder preguntas del producto y consultar datos propios autorizados; no invoca operaciones financieras | `src/modules/asistencia/` |
-| **Outbox y consumo de eventos** | Entrega confiable | Persistir junto con la transferencia el evento que requiere análisis; el worker lo reclama y reintenta | Tabla durable del almacenamiento; tecnología por definir |
+| **Outbox y consumo de eventos** | Entrega confiable | Persistir junto con la transferencia el evento que requiere análisis; el worker lo reclama y reintenta | Tabla PostgreSQL durable |
 | **Worker de análisis de riesgo** | Análisis posterior | Procesar eventos del outbox, consultar reglas/modelo y generar alertas no vinculantes; no modifica saldos ni bloquea cuentas | `src/workers/analisis-riesgo/` |
 
 ---
@@ -157,8 +157,8 @@ flowchart TB
 
 | Componente | Destino | Descripción | Protocolo | Patrón aplicado |
 |---|---|---|---|---|
-| Módulo Saldos | Base de datos transaccional (producto por definir) | Es propietario del libro de saldos y registra movimientos atómicos | Protocolo del servicio seleccionado | Repository |
-| Módulos de negocio | Base de datos transaccional | Persisten sus datos mediante repositorios; no modifican directamente el libro de otro módulo | Protocolo del servicio seleccionado | Repository |
+| Módulo Saldos | PostgreSQL (hosting por decidir) | Es propietario del libro de saldos y registra movimientos atómicos y eventos outbox | Protocolo PostgreSQL | Repository |
+| Módulos de negocio | PostgreSQL | Persisten sus datos mediante repositorios; no modifican directamente el libro de otro módulo | Protocolo PostgreSQL | Repository |
 | Saldos | Caché (tecnología por definir) | Mantiene vistas derivadas para lectura; nunca autoriza fondos ni registra movimientos | Protocolo del servicio seleccionado | Decorator |
 | Pagos | Pasarela de pago | Cobra | HTTPS/REST | Adapter |
 | Compras | Proveedor custodial | Solicita adquisición/consulta de activos; simulado en la fase académica | HTTPS/REST | Adapter |

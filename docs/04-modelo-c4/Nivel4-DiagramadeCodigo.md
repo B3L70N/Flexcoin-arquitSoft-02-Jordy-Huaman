@@ -60,8 +60,7 @@ classDiagram
 
     class TransferenciaRepository {
         <<interface>>
-        + registrarAtomica(transferencia, claveIdempotencia): Promise~ResultadoTransferencia~
-        + buscarPorClaveIdempotencia(clave): Promise~ResultadoTransferencia~
+        + registrarAtomica(transferencia, usuarioId, claveIdempotencia): Promise~ResultadoTransferencia~
     }
 
     class ResultadoTransferencia {
@@ -71,9 +70,28 @@ classDiagram
     }
 
     class RepositorioTransaccionalLibroAdapter {
-        - almacenamiento: Transaccional
-        + registrarAtomica(transferencia, claveIdempotencia): Promise~ResultadoTransferencia~
-        + buscarPorClaveIdempotencia(clave): Promise~ResultadoTransferencia~
+        - db: PostgreSQL
+        + registrarAtomica(transferencia, usuarioId, claveIdempotencia): Promise~ResultadoTransferencia~
+    }
+
+    class CuentaSaldo {
+        + usuarioId: string
+        + activo: string
+        + unidadesDisponibles: bigint
+    }
+
+    class ApunteContable {
+        + id: string
+        + transferenciaId: string
+        + cuentaId: string
+        + unidades: bigint
+    }
+
+    class EventoOutbox {
+        + id: string
+        + tipo: string
+        + referenciaOperacion: string
+        + estado: string
     }
 
     %% RELACIONES
@@ -85,6 +103,9 @@ classDiagram
 
     RepositorioTransaccionalLibroAdapter ..|> TransferenciaRepository
     TransferenciaRepository ..> ResultadoTransferencia : retorna
+    RepositorioTransaccionalLibroAdapter --> CuentaSaldo : actualiza en transacción
+    RepositorioTransaccionalLibroAdapter --> ApunteContable : inserta apuntes balanceados
+    RepositorioTransaccionalLibroAdapter --> EventoOutbox : inserta en misma transacción
 ```
 
 ### 2.1 Capas de Clean Architecture
@@ -107,10 +128,13 @@ classDiagram
 | `Transferencia` | Entidad | Dominio | Valida origen, destino y monto de la transferencia interna |
 | `MontoTransferencia` | Objeto de valor | Dominio | Monto y criptomoneda con validación propia |
 | `EstadoTransferencia` | Enumeración | Dominio | COMPLETADA o RECHAZADA; la operación interna se confirma dentro de una transacción |
-| `TransferenciaRepository` | Interfaz | Aplicación/Dominio | Contrato para aplicar el débito, el crédito y el registro en una transacción, con idempotencia |
-| `RepositorioTransaccionalLibroAdapter` | Repositorio | Infraestructura | Implementa el contrato usando el almacenamiento transaccional seleccionado, aún por definir |
+| `TransferenciaRepository` | Interfaz | Aplicación/Dominio | Contrato para aplicar el débito, crédito, saldos, transferencia y outbox en una transacción, con idempotencia |
+| `RepositorioTransaccionalLibroAdapter` | Repositorio | Infraestructura | Implementa el contrato con PostgreSQL; el hosting queda por decidir |
+| `CuentaSaldo` | Proyección | Dominio/Persistencia | Mantiene unidades disponibles por usuario/activo; se actualiza junto con los apuntes inmutables |
+| `ApunteContable` | Registro contable | Dominio/Persistencia | Registra los dos lados de cada transferencia, balanceados por activo |
+| `EventoOutbox` | Evento durable | Persistencia | Conserva en la misma transacción el evento requerido para análisis asíncrono |
 
-La garantía de concurrencia proviene de la operación atómica del almacenamiento autoritativo, no de un bloqueo en memoria. El mecanismo concreto dependerá de la base de datos seleccionada y deberá probarse bajo carga concurrente.
+La garantía de concurrencia proviene de una transacción PostgreSQL con actualización condicional/bloqueo de filas en orden determinista, más restricciones únicas de idempotencia; no depende de un bloqueo en memoria. Se validará con pruebas de concurrencia.
 
 ### 2.4 Notación UML utilizada
 
@@ -137,39 +161,50 @@ sequenceDiagram
     participant TR as TransferenciaRepository
     participant DB as Almacenamiento transaccional
 
-    CW->>TC: POST /api/v1/transferencias {destinoId, monto, activo, claveIdempotencia} + JWT
+    CW->>TC: POST /api/v1/transferencias {destinoId, activo, montoUnidades} + Bearer JWT + Idempotency-Key
     TC->>UC: ejecutar(cmd)
     UC->>T: crear(origenId, destinoId, monto)
     T-->>UC: transferencia validada
-    UC->>TR: registrarAtomica(transferencia, claveIdempotencia)
+    UC->>TR: registrarAtomica(transferencia, usuarioId, clave)
     TR->>DB: BEGIN
-    TR->>DB: Validar fondos y clave idempotente
-    TR->>DB: Registrar débito, crédito y transferencia
+    TR->>DB: Resolver clave idempotente (única por usuario/operación)
+    TR->>DB: Bloquear origen y destino en orden determinista
+    TR->>DB: Comprobar saldo y debitar/acreditar proyecciones
+    TR->>DB: Insertar transferencia, apuntes balanceados y evento outbox
     alt fondos suficientes y solicitud nueva
         TR->>DB: COMMIT
         DB-->>TR: confirmado
         TR-->>UC: transferencia completada
         UC-->>TC: transferenciaId
         TC-->>CW: 201 Created
-    else fondos insuficientes o solicitud duplicada
-        TR->>DB: ROLLBACK o devolver resultado previo
-        DB-->>TR: sin movimiento parcial
-        TR-->>UC: rechazo o resultado idempotente
-        UC-->>TC: resultado
-        TC-->>CW: 409 Conflict o respuesta previamente registrada
+    else misma clave y mismo cuerpo ya procesado
+        TR->>DB: Recuperar respuesta original; no insertar nuevos apuntes
+        TR-->>UC: resultado idempotente original
+        UC-->>TC: respuesta original
+        TC-->>CW: respuesta original
+    else misma clave con cuerpo diferente
+        TR->>DB: ROLLBACK
+        TR-->>UC: conflicto de idempotencia
+        UC-->>TC: error
+        TC-->>CW: 409 Conflict
+    else fondos insuficientes
+        TR->>DB: ROLLBACK; sin movimiento parcial
+        TR-->>UC: rechazo de fondos
+        UC-->>TC: error
+        TC-->>CW: 409 Conflict
     end
 ```
 
 | Paso | Origen a destino | Acción |
 |---|---|---|
-| 1 | Cliente web a `TransferenciaController` | Envía destino, monto, activo, clave de idempotencia y JWT |
+| 1 | Cliente web a `TransferenciaController` | Envía destino, activo y `montoUnidades` (entero decimal como cadena), Bearer JWT y encabezado `Idempotency-Key` |
 | 2 | `TransferenciaController` a `TransferirCriptomonedasUseCase` | Ejecuta el caso de uso con la identidad tomada de la sesión autenticada |
 | 3 | Caso de uso a `Transferencia` | Valida origen, destino y monto |
 | 4 | Caso de uso a `TransferenciaRepository` | Solicita el débito, el crédito y el registro como una operación atómica |
-| 5 | Repositorio a almacenamiento transaccional | Comprueba fondos e idempotencia; aplica ambos movimientos y confirma juntos |
-| 6 | Alternativa | Si no hay fondos suficientes, revierte todo; si la clave ya existe, devuelve el resultado previo sin duplicar movimientos |
+| 5 | Repositorio a PostgreSQL | Resuelve idempotencia; bloquea cuentas en orden determinista; aplica débitos/créditos, saldos, apuntes balanceados y outbox en una transacción |
+| 6 | Alternativa | Fondos insuficientes o clave reutilizada con datos distintos revierte sin movimiento parcial; una repetición idéntica devuelve la respuesta original |
 | 7 | Caso de uso a `TransferenciaController` | Devuelve el resultado confirmado o el rechazo de fondos |
-| 8 | `TransferenciaController` a cliente web | Responde con el identificador y el estado de la transferencia interna |
+| 8 | `TransferenciaController` a cliente web | Responde `201 Created` con el identificador, estado, activo y monto; reintentos idénticos retornan el resultado original |
 
 El proveedor custodial y la blockchain **no participan** en esta secuencia. Un retiro externo es un caso de uso distinto, inicialmente simulado, que guarda su estado antes de consultar al proveedor y reconcilia respuestas posteriores.
 
