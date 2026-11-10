@@ -161,48 +161,57 @@ sequenceDiagram
     participant TR as TransferenciaRepository
     participant DB as Almacenamiento transaccional
 
-    CW->>TC: POST /api/v1/transferencias {destinoId, activo, montoUnidades} + Bearer JWT + Idempotency-Key
+    Note over CW,TC: Autenticación Bearer y validación del cuerpo ocurren antes de reservar la clave; sus errores no la consumen
+    CW->>TC: POST /api/v1/transferencias {destinoId, activo, montoUnidades} + Authorization: Bearer + Idempotency-Key
     TC->>UC: ejecutar(cmd)
     UC->>T: crear(origenId, destinoId, monto)
     T-->>UC: transferencia validada
     UC->>TR: registrarAtomica(transferencia, usuarioId, clave)
     TR->>DB: BEGIN
-    TR->>DB: Resolver clave idempotente (única por usuario/operación)
-    TR->>DB: Bloquear origen y destino en orden determinista
-    TR->>DB: Comprobar saldo y debitar/acreditar proyecciones
-    TR->>DB: Insertar transferencia, apuntes balanceados y evento outbox
-    alt fondos suficientes y solicitud nueva
-        TR->>DB: COMMIT
-        DB-->>TR: confirmado
-        TR-->>UC: transferencia completada
-        UC-->>TC: transferenciaId
-        TC-->>CW: 201 Created
-    else misma clave y mismo cuerpo ya procesado
-        TR->>DB: Recuperar respuesta original; no insertar nuevos apuntes
+    TR->>DB: Resolver clave idempotente y hash de solicitud
+    alt resultado previo para misma clave y cuerpo
+        TR->>DB: Recuperar respuesta HTTP original
         TR-->>UC: resultado idempotente original
         UC-->>TC: respuesta original
         TC-->>CW: respuesta original
     else misma clave con cuerpo diferente
-        TR->>DB: ROLLBACK
+        TR->>DB: ROLLBACK de la transacción de lectura
         TR-->>UC: conflicto de idempotencia
         UC-->>TC: error
         TC-->>CW: 409 Conflict
-    else fondos insuficientes
-        TR->>DB: ROLLBACK; sin movimiento parcial
-        TR-->>UC: rechazo de fondos
-        UC-->>TC: error
-        TC-->>CW: 409 Conflict
+    else solicitud nueva
+        TR->>DB: Bloquear origen y destino en orden determinista
+        TR->>DB: Comprobar saldo
+        alt fondos suficientes
+            TR->>DB: Debitar/acreditar; insertar transferencia, apuntes y outbox
+            TR->>DB: COMMIT
+            DB-->>TR: confirmado
+            TR-->>UC: transferencia completada
+            UC-->>TC: transferenciaId
+            TC-->>CW: 201 Created
+        else fondos insuficientes
+            TR->>DB: Guardar respuesta 409 en idempotencia, sin movimiento
+            TR->>DB: COMMIT resultado terminal
+            TR-->>UC: rechazo de fondos
+            UC-->>TC: error
+            TC-->>CW: 409 Conflict
+        else error técnico transitorio
+            TR->>DB: ROLLBACK; elimina reserva de clave
+            TR-->>UC: error temporal
+            UC-->>TC: error
+            TC-->>CW: 5xx; puede reintentar con la misma clave
+        end
     end
 ```
 
 | Paso | Origen a destino | Acción |
 |---|---|---|
-| 1 | Cliente web a `TransferenciaController` | Envía destino, activo y `montoUnidades` (entero decimal como cadena), Bearer JWT y encabezado `Idempotency-Key` |
+| 1 | Cliente web a `TransferenciaController` | Envía destino, activo y `montoUnidades` (entero decimal como cadena), `Authorization: Bearer <access_token>` y encabezado `Idempotency-Key` |
 | 2 | `TransferenciaController` a `TransferirCriptomonedasUseCase` | Ejecuta el caso de uso con la identidad tomada de la sesión autenticada |
 | 3 | Caso de uso a `Transferencia` | Valida origen, destino y monto |
 | 4 | Caso de uso a `TransferenciaRepository` | Solicita el débito, el crédito y el registro como una operación atómica |
 | 5 | Repositorio a PostgreSQL | Resuelve idempotencia; bloquea cuentas en orden determinista; aplica débitos/créditos, saldos, apuntes balanceados y outbox en una transacción |
-| 6 | Alternativa | Fondos insuficientes o clave reutilizada con datos distintos revierte sin movimiento parcial; una repetición idéntica devuelve la respuesta original |
+| 6 | Alternativa | Fondos insuficientes guarda el rechazo `409` como resultado idempotente, sin cambios financieros; una repetición idéntica recibe ese mismo resultado y un nuevo intento requiere nueva clave. Errores técnicos revierten la reserva de clave |
 | 7 | Caso de uso a `TransferenciaController` | Devuelve el resultado confirmado o el rechazo de fondos |
 | 8 | `TransferenciaController` a cliente web | Responde `201 Created` con el identificador, estado, activo y monto; reintentos idénticos retornan el resultado original |
 

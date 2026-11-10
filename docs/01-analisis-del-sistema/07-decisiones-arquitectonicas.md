@@ -156,7 +156,7 @@ Para análisis de riesgo, los eventos de negocio —inicialmente, las transferen
 
 **Decisión.** Los usuarios se registran e inician sesión con correo y contraseña. La contraseña se almacena únicamente como hash Argon2id con parámetros vigentes y configurables. La API emite un JWT de acceso de vida corta para las llamadas autenticadas y renueva la sesión mediante refresh token rotatorio en cookie `HttpOnly`, `Secure` y con `SameSite` apropiado. Los refresh tokens se almacenan en forma de hash para permitir rotación, revocación y cierre de sesión.
 
-El JWT de acceso se envía como Bearer y el frontend lo mantiene solo en memoria; no se guarda en `localStorage`. Las rutas de autenticación con cookie aplican protección CSRF adecuada al diseño de origen/CORS.
+El JWT de acceso se envía en el encabezado `Authorization: Bearer <access_token>` y el frontend lo mantiene solo en memoria; no se guarda en `localStorage`. Las rutas que reciben el refresh token mediante cookie aplican protección CSRF adecuada al diseño de origen/CORS.
 
 **Justificación.** La SPA puede consumir la API REST mediante tokens sin mantener una sesión de servidor para cada petición, mientras que la rotación y revocación limitan la exposición de sesiones largas.
 
@@ -179,18 +179,19 @@ Las cantidades se representan como unidades enteras mínimas del activo, nunca c
 
 **Contrato HTTP inicial de transferencia.**
 
-- `POST /api/v1/transferencias`, autenticado con Bearer JWT.
+- `POST /api/v1/transferencias`, autenticado con `Authorization: Bearer <access_token>`
 - `Idempotency-Key` obligatorio en el encabezado; el cuerpo contiene `destinoId`, `activo` y `montoUnidades` como cadena decimal entera positiva. El origen no viene en el cuerpo.
 - En éxito responde `201 Created` con `transferenciaId`, estado y monto/activo registrados.
 - Un reintento con la misma clave y la misma solicitud no crea otro movimiento y devuelve el resultado original. Reutilizar la clave con datos diferentes se rechaza con `409 Conflict`.
-- Se rechazan solicitudes inválidas con `400`, no autenticadas con `401`, recursos inexistentes/no disponibles con respuesta controlada y fondos insuficientes con `409`; ningún rechazo deja movimientos parciales.
+- Una solicitud autenticada y válida que se rechaza por fondos insuficientes consume la clave y guarda el resultado `409`; los reintentos idénticos reciben ese resultado aunque el saldo cambie. Para intentar de nuevo después de agregar fondos se usa una clave nueva. Este rechazo no crea transferencia, apuntes, cambios de saldo ni evento outbox.
+- Los errores de autenticación (`401`) o validación (`400`) ocurren antes de reservar la clave y no la consumen. Los errores técnicos transitorios revierten la reserva y permiten reintentar con la misma clave. Ningún rechazo deja movimientos parciales.
 
-**Transacción lógica.** Validar y reservar idempotencia; bloquear/actualizar las cuentas de origen y destino en orden determinista; comprobar y debitar únicamente si el saldo alcanza; acreditar el destino; insertar transferencia y dos apuntes balanceados; insertar el evento del outbox; confirmar todo junto. El conflicto de clave, falta de fondos o cualquier fallo revierte todos los cambios. La restricción única de idempotencia y las escrituras condicionales/locks de PostgreSQL protegen ante solicitudes concurrentes; no se usan bloqueos en memoria.
+**Transacción lógica.** Tras autenticar y validar la solicitud, reservar la clave de idempotencia y comprobar si ya existe un resultado para esa clave y hash de solicitud. Si ya existe, devolver el resultado original o rechazar el uso con un cuerpo distinto. Para una solicitud nueva, bloquear las cuentas de origen y destino en orden determinista y comprobar los fondos. Si son insuficientes, guardar el resultado terminal `409` en el registro idempotente y confirmar ese registro sin crear transferencia, apuntes, cambios de saldo ni outbox. Si alcanzan, debitar/acreditar, insertar transferencia, dos apuntes balanceados y el evento outbox, y confirmar todo en una sola transacción. Un error técnico revierte la reserva para permitir reintento; autenticación y validación ocurren antes de reservar. La restricción única de idempotencia y las escrituras condicionales/locks de PostgreSQL protegen ante solicitudes concurrentes; no se usan bloqueos en memoria.
 
 **Consecuencias y pruebas obligatorias.**
 
 - La fuente auditable son los apuntes inmutables; la proyección acelera consultas, pero debe reconciliarse con la suma del libro.
 - Una corrección contable se hace mediante apuntes compensatorios, nunca editando o borrando movimientos confirmados.
 - Cada transferencia debe producir apuntes cuyo total neto sea cero para el activo y actualizar ambos saldos y el outbox de forma atómica.
-- Pruebas de integración deben cubrir transferencias concurrentes sobre un mismo origen, claves idempotentes repetidas/conflictivas, saldo insuficiente, fallos a mitad de transacción y consistencia entre apuntes y proyecciones.
-- El manejo de una misma clave después de un rechazo determinista y los detalles numéricos de precisión/límites por activo deben fijarse en el contrato de API y catálogo de activos antes de implementar.
+- Pruebas de integración deben cubrir transferencias concurrentes sobre un mismo origen, claves idempotentes repetidas/conflictivas, rechazo por saldo insuficiente repetido con la misma clave, nuevo intento con clave nueva, errores de validación sin consumo de clave, fallos técnicos con reserva revertida y consistencia entre apuntes y proyecciones.
+- Los detalles numéricos de precisión/límites por activo deben fijarse en el catálogo de activos antes de implementar.
