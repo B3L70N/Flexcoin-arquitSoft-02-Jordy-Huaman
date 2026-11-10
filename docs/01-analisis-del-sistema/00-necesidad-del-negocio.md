@@ -23,6 +23,8 @@ La plataforma debe permitir a los usuarios:
 - Transferir saldos entre usuarios de QuillaCoin mediante movimientos internos del libro de saldos, sin enviar una transacción a la blockchain.
 - Solicitar retiros externos a direcciones compatibles mediante el proveedor, registrando y consultando el estado de cada solicitud.
 - Consultar el historial de sus operaciones.
+- Recibir asistencia conversacional para usar la plataforma y consultar únicamente su propia información autorizada.
+- Identificar señales de actividad inusual después de registrar las operaciones, mediante un análisis asíncrono que genere alertas para revisión administrativa.
 
 Y debe hacerlo garantizando que **las operaciones concurrentes no generen inconsistencias en los saldos**, que fue justamente lo que provocó el colapso de la plataforma original.
 
@@ -38,6 +40,8 @@ El sistema requiere una arquitectura que:
 - Mantenga un libro de saldos auditable y aplique de forma atómica los débitos y créditos de las transferencias internas.
 - Trate el libro de saldos como fuente de verdad; el caché solo será una vista temporal de lectura.
 - Procese los retiros externos con estados, solicitudes idempotentes y reconciliación con el proveedor ante fallos o respuestas tardías.
+- Mantenga el análisis de riesgo fuera de la ruta crítica: una IA lenta o indisponible no debe impedir ni revertir una transferencia confirmada.
+- Proteja la privacidad y mantenga supervisión humana: el chat no ejecuta movimientos y las alertas de IA no bloquean cuentas automáticamente.
 - Se integre de forma desacoplada con la pasarela peruana y el proveedor custodial, sin asumir una integración directa de QuillaCoin con la blockchain.
 - Sea mantenible y evolutiva, dado que es un proyecto académico que puede crecer.
 

@@ -37,4 +37,4 @@ Explora la arquitectura y el flujo de QuillaCoin a través de nuestra presentaci
 </div>
 
 ## 📚 Curso
-Arquitectura de Software - Laboratorio 02
+Arquitectura de Software

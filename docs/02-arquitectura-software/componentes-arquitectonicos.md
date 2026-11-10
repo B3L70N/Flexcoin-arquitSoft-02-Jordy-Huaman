@@ -25,17 +25,20 @@ flowchart TB
             ModConc["Integridad transaccional<br/>[Responsabilidad transversal]<br/>Consistencia aplicada por el almacenamiento"]
             ModPag["Pagos<br/>[Componente: módulo]<br/>Cobro mediante la pasarela"]
             ModNot["Notificaciones<br/>[Componente: módulo]<br/>Avisa estado de operaciones"]
+            ModChat["Asistencia conversacional<br/>[Componente: módulo]<br/>Restringe contexto y capacidades"]
         end
     end
 
+    Worker["Worker de análisis de riesgo<br/>[Proceso separado]<br/>Consume outbox y crea alertas"]
     %% ============ ALMACENAMIENTO ============
     Cache[("Caché<br/>[Contenedor: tecnología por definir]<br/>Vista temporal, no autoritativa")]
-    DB[("Base de datos transaccional<br/>[Contenedor: D1 o PostgreSQL, por evaluar]<br/>Libro interno y operaciones")]
+    DB[("Base de datos transaccional<br/>[Contenedor: almacenamiento por evaluar]<br/>Libro, operaciones, outbox y alertas")]
 
     %% ============ SISTEMAS EXTERNOS ============
     subgraph Externos ["Sistemas Externos"]
         Pasarela["Pasarela de pago<br/>[Sistema externo]<br/>Procesa pagos"]
         Proveedor["Proveedor custodial<br/>[Sistema externo]<br/>Mantiene fondos agrupados y procesa retiros externos"]
+        IA["Proveedor de IA<br/>[Sistema externo opcional]<br/>Responde y evalúa señales minimizadas"]
     end
 
     %% ============ CONEXIONES ============
@@ -49,6 +52,7 @@ flowchart TB
     API -->|Invoca casos de uso| ModCom
     API -->|Invoca casos de uso| ModTrans
     API -->|Invoca casos de uso| ModOp
+    API -->|Chat autenticado| ModChat
 
     ModUsr -->|Valida cuenta| ModSal
     ModSal -->|Verifica fondos| ModCom
@@ -58,7 +62,8 @@ flowchart TB
     ModCom -->|Solicita cobro| ModPag
     ModCom -->|Solicita adquisición de cripto| Proveedor
 
-    ModTrans -->|Registra débito y crédito atómicos| ModSal
+    ModTrans -->|Solicita transferencia y evento de riesgo| ModSal
+    ModChat -->|Pregunta autorizada y contexto minimizado| IA
 
     ModOp -->|Consulta movimientos| ModSal
     ModOp -->|Solicita retiro externo y consulta estado| Proveedor
@@ -71,10 +76,14 @@ flowchart TB
 
     ModCom -->|Publica cambio de estado| ModNot
     ModTrans -->|Publica cambio de estado| ModNot
+    ModTrans -->|Guarda evento de análisis en la misma transacción| DB
+    Worker -->|Consume/reintenta eventos pendientes del outbox| DB
+    Worker -->|Solicita análisis de señales minimizadas| IA
+    Worker -->|Registra alertas no vinculantes| DB
 
     ModSal -->|Actualiza vista de lectura derivada| Cache
 
-    ModSal -->|Mantiene el libro en transacciones| DB
+    ModSal -->|Registra libro y evento outbox en la misma transacción| DB
     Modulos -.->|Usan repositorios; Saldos es propietario del libro| DB
 
     %% ============ ESTILOS ============
@@ -90,8 +99,11 @@ flowchart TB
     style ModConc fill:#f5b7b1,stroke:#922b21,color:#000000
     style ModPag fill:#aed6f1,stroke:#1b4f72,color:#000000
     style ModNot fill:#aed6f1,stroke:#1b4f72,color:#000000
+    style ModChat fill:#aed6f1,stroke:#1b4f72,color:#000000
+    style Worker fill:#d2b4de,stroke:#512e5f,color:#000000
     style Cache fill:#d5dbdb,stroke:#566573,color:#000000
     style DB fill:#d5dbdb,stroke:#566573,color:#000000
     style Pasarela fill:#bdc3c7,stroke:#2c3e50,color:#000000
     style Proveedor fill:#bdc3c7,stroke:#2c3e50,color:#000000
+    style IA fill:#bdc3c7,stroke:#2c3e50,color:#000000
 ```

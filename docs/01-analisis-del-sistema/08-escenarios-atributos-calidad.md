@@ -80,6 +80,58 @@ En contraste, los retiros externos son operaciones separadas: se registran con e
 | **Verificación** | Revisar los cambios de código, ejecutar las pruebas e inspeccionar las dependencias entre módulos. |
 | **Estado** | Pendiente de definir las reglas de dependencias y las pruebas obligatorias. |
 
+## EQ-07. Resiliencia: análisis de riesgo asíncrono
+
+| Elemento | Descripción |
+|---|---|
+| **Atributo de calidad** | Resiliencia asíncrona y consistencia |
+| **Fuente** | Usuario que realiza una transferencia; cola, worker o proveedor de IA indisponible |
+| **Estímulo** | Se confirma una transferencia mientras el transporte de eventos o el proveedor de IA está lento o no disponible. |
+| **Condición** | El almacenamiento autoritativo está operativo; el análisis externo puede fallar. |
+| **Respuesta esperada** | El débito y crédito se confirman atómicamente y el evento queda en el outbox dentro de la misma transacción. El análisis se reintenta después sin duplicar movimientos ni resultados; nunca se espera al modelo para responder la transferencia. |
+| **Medida** | 100 % de transferencias confirmadas en la prueba tienen un evento persistido; el 100 % de eventos reintentados conserva un único resultado lógico. **Objetivo de demora de procesamiento por definir y validar.** |
+| **Verificación** | Inducir fallos y demoras en publicación, worker y proveedor; comparar transferencias, outbox, reintentos y alertas. |
+| **Estado** | Requisitos de entrega y pruebas identificados; tecnología y objetivo de demora pendientes. |
+
+## EQ-08. Privacidad y disponibilidad: chat de asistencia
+
+| Elemento | Descripción |
+|---|---|
+| **Atributo de calidad** | Seguridad, privacidad y disponibilidad |
+| **Fuente** | Usuario autenticado o proveedor de IA indisponible |
+| **Estímulo** | El usuario pregunta por operaciones propias, intenta obtener datos ajenos o el modelo no responde. |
+| **Condición** | Se aplican autenticación, autorización y políticas de minimización del contexto. |
+| **Respuesta esperada** | El servidor limita las consultas a datos autorizados del usuario, no revela datos de terceros ni ejecuta operaciones. Si la IA falla, el chat informa que no está disponible sin afectar las funciones financieras. |
+| **Medida** | Rechazar el 100 % de los casos no autorizados cubiertos por pruebas; cero credenciales o secretos en solicitudes al modelo; las transferencias continúan operativas durante pruebas de indisponibilidad del chat. **Meta de latencia del chat pendiente.** |
+| **Verificación** | Probar acceso cruzado entre cuentas, entradas adversariales, registro de datos y caída/timeout del proveedor. |
+| **Estado** | Controles definidos; proveedor, retención y metas de servicio por seleccionar. |
+
+## EQ-09. Gobernanza: alertas y decisiones de riesgo
+
+| Elemento | Descripción |
+|---|---|
+| **Atributo de calidad** | Trazabilidad y supervisión humana |
+| **Fuente** | Worker de análisis y administrador autorizado |
+| **Estímulo** | El análisis encuentra una señal de posible anomalía. |
+| **Condición** | El modelo puede producir resultados imprecisos y el evento contiene solo datos minimizados. |
+| **Respuesta esperada** | Se crea una alerta no vinculante con referencia al evento, señales/motivo, versión de reglas/modelo y estado de revisión. Solo personal autorizado puede registrar una resolución; una restricción se ejecuta por el flujo administrativo auditado, nunca por el modelo. |
+| **Medida** | El 100 % de alertas de prueba conserva evento, versión del analizador y resolución; cero bloqueos automáticos realizados por IA. |
+| **Verificación** | Revisar registros de auditoría, permisos y pruebas de salida del modelo que soliciten una acción no autorizada. |
+| **Estado** | Política de supervisión definida; taxonomía de alertas y retención por acordar. |
+
+## EQ-10. Efectividad: evaluación del análisis de riesgo
+
+| Elemento | Descripción |
+|---|---|
+| **Atributo de calidad** | Efectividad evaluable |
+| **Fuente** | Equipo responsable del análisis y conjunto de operaciones etiquetadas |
+| **Estímulo** | Se incorpora o cambia una regla, modelo, proveedor o versión de configuración. |
+| **Condición** | Existe un conjunto de evaluación representativo, separado de los datos de entrenamiento cuando corresponda. |
+| **Respuesta esperada** | Antes de usar el resultado como señal operativa se reportan precisión, recall y tasas de falsos positivos/negativos; los umbrales de aceptación se acuerdan con el equipo y las alertas siguen siendo no vinculantes. |
+| **Medida** | Cada versión evaluada tiene métricas reproducibles y aprobación documentada frente a umbrales acordados; los valores numéricos quedan pendientes de definición y no se presume que el modelo detecte fraude con certeza. |
+| **Verificación** | Ejecutar pruebas offline sobre datos etiquetados, comparar versiones y conservar modelo/reglas, conjunto y resultados de cada evaluación. |
+| **Estado** | Pendiente de disponer datos representativos, acordar umbrales y seleccionar el enfoque de análisis. |
+
 ---
 
 ## Resumen de escenarios
@@ -92,3 +144,7 @@ En contraste, los retiros externos son operaciones separadas: se registran con e
 | EQ-04 | Escalabilidad | Que el sistema soporte un aumento de usuarios dentro de los límites definidos. |
 | EQ-05 | Seguridad | Que las operaciones protegidas no puedan ejecutarse sin autorización. |
 | EQ-06 | Mantenibilidad | Que los cambios puedan realizarse sin afectar innecesariamente otras funciones. |
+| EQ-07 | Resiliencia asíncrona | Que transferencias y eventos sigan siendo consistentes ante fallos del análisis. |
+| EQ-08 | Privacidad y disponibilidad | Que el chat limite los datos y su caída no afecte operaciones financieras. |
+| EQ-09 | Trazabilidad y supervisión | Que las alertas sean explicables/auditables y ninguna acción se automatice por decisión del modelo. |
+| EQ-10 | Efectividad evaluable | Que los resultados se contrasten con datos etiquetados antes de considerarlos señales operativas. |

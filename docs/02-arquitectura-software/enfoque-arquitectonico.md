@@ -57,6 +57,8 @@ Esto garantiza que las reglas del negocio, especialmente el control de concurren
 | Compras | Aplicación | Orquestar compra de criptomonedas. |
 | Transferencias | Aplicación | Orquestar transferencias entre usuarios. |
 | Operaciones | Aplicación | Historial, retiros y depósitos. |
+| Asistencia conversacional | Aplicación e Infraestructura | Responder consultas acotadas; cualquier dato de cuenta se obtiene mediante operaciones autorizadas, nunca mediante acceso directo del modelo a la base. |
+| Análisis de riesgo | Aplicación e Infraestructura | Consumir eventos del outbox fuera de la ruta HTTP y emitir alertas no vinculantes para revisión humana. |
 | Integridad del libro | Dominio y persistencia | Las reglas de negocio se coordinan con una operación transaccional del almacenamiento autoritativo para evitar sobregiros y movimientos parciales. |
 
 ---
@@ -83,6 +85,8 @@ flowchart TD
         A4[Transferir criptomonedas]
         A5[Consultar historial]
         A6[Retirar criptomonedas]
+        A7[Atender consulta del asistente]
+        A8[Analizar evento de operación]
     end
 
     subgraph Dominio ["Dominio"]
@@ -97,6 +101,8 @@ flowchart TD
         I3[Proveedor de criptomonedas]
         I4[Proveedor custodial para retiros]
         I5[Notificaciones]
+        I6[Proveedor de IA]
+        I7[Outbox y transporte de eventos]
     end
 
     P1 --> A1
@@ -105,6 +111,7 @@ flowchart TD
     P1 --> A4
     P1 --> A5
     P1 --> A6
+    P1 --> A7
 
     A1 --> D2
     A2 --> D2
@@ -112,6 +119,8 @@ flowchart TD
     A4 --> D2
     A5 --> D2
     A6 --> D2
+    A7 --> D2
+    A8 --> D2
 
     D2 --> D1
     D2 --> D3
@@ -121,6 +130,8 @@ flowchart TD
     I3 -.->|implementa| D2
     I4 -.->|implementa| D2
     I5 -.->|implementa| D2
+    I6 -.->|implementa| D2
+    I7 -.->|implementa| D2
 ```
 
 Las flechas continuas representan invocación en tiempo de ejecución. Las flechas discontinuas representan la implementación de contratos definidos en el dominio.
@@ -152,4 +163,6 @@ El archivo `app.config.ts` es el único lugar donde se decide qué adaptador cum
 - **Pruebas sin infraestructura.** El dominio puede probarse sin navegador, sin base de datos y sin servicios externos.
 - **Cambio de proveedor sin dolor.** Sustituir la pasarela o el proveedor custodial implica escribir un adaptador nuevo, no modificar la lógica de compras o del libro.
 - **Consistencia controlada.** Transferencias internas aplican débito y crédito juntos en el libro autoritativo; no llaman al proveedor ni a la blockchain. Los retiros externos son otro flujo.
+- **IA fuera de la ruta financiera crítica.** La API confirma la transferencia y guarda el evento en el outbox; un worker analiza después y genera una sugerencia. Una falla del modelo no revierte ni demora el movimiento confirmado.
+- **Límites de autoridad y privacidad.** El chat no ejecuta transacciones; el análisis no bloquea cuentas. El servidor aplica permisos y minimiza el contexto enviado a servicios externos.
 - **Mantenibilidad real.** Cada capa tiene una responsabilidad clara, lo que reduce el acoplamiento y facilita la evolución del sistema.

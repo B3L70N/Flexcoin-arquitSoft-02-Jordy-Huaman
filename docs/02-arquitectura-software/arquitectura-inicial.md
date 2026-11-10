@@ -4,7 +4,7 @@
 
 Organizar los módulos identificados dentro de una primera propuesta de arquitectura, utilizando una arquitectura de tres capas.
 
-> **Nota de vigencia:** este documento conserva la propuesta inicial de capas. La distinción actual entre transferencias internas, retiros externos y el libro de saldos queda definida en ADR007 y en los diagramas C4 actualizados.
+> **Nota de vigencia:** este documento conserva la propuesta inicial de capas. La distinción entre transferencias internas, retiros externos y el libro de saldos queda definida en ADR007; el chat de asistencia y el análisis asíncrono de riesgo quedan definidos en ADR008 y en los diagramas C4 actualizados.
 
 ---
 

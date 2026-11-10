@@ -20,6 +20,7 @@ Identificar las restricciones que condicionan las decisiones de diseño y arquit
 | RC08 | Modelo de saldos y custodia | QuillaCoin mantiene el libro interno de saldos y el modelo objetivo agrupa los fondos en un proveedor custodial. La entidad proveedora y la viabilidad de producción están pendientes de validación. |
 | RC09 | Despliegue y persistencia | Cloudflare es la plataforma objetivo. El runtime, la base de datos y el caché deben seleccionarse tras verificar soporte transaccional, consistencia y compatibilidad. |
 | RC10 | Automatización | La integración y el despliegue continuo (CI/CD) deben automatizar las verificaciones y los despliegues acordados para cada entorno; la política de promoción a producción queda por definir. |
+| RC11 | Uso de IA | El proveedor de IA es opcional y debe integrarse desde el backend mediante contratos. Se minimizan y autorizan los datos enviados; el modelo no puede ejecutar operaciones financieras ni suspender cuentas. |
 
 ---
 
@@ -27,7 +28,7 @@ Identificar las restricciones que condicionan las decisiones de diseño y arquit
 
 | Tipo | Restricciones |
 |------|---------------|
-| Técnicas | RC01, RC03, RC09, RC10 |
+| Técnicas | RC01, RC03, RC09, RC10, RC11 |
 | De integración | RC04, RC08 |
 | De alcance y operación | RC06, RC07 |
 | De gestión del proyecto | RC02, RC05 |
@@ -48,3 +49,4 @@ Identificar las restricciones que condicionan las decisiones de diseño y arquit
 | RC08 Modelo de saldos y custodia | Requiere mantener un libro interno consistente, integrar al proveedor mediante su API y validar antes de producción que su servicio admita el modelo agrupado. |
 | RC09 Despliegue y persistencia | Orienta el despliegue a Cloudflare, pero no predetermina una base de datos o caché hasta comprobar las garantías necesarias para el libro de saldos. |
 | RC10 Automatización | Requiere pipeline CI/CD con verificaciones y despliegues automatizados, según una política de promoción aún por definir. |
+| RC11 Uso de IA | Requiere un adaptador sustituible, revisión de condiciones de tratamiento/retención del proveedor y separación entre sugerencias del modelo y decisiones administrativas. |

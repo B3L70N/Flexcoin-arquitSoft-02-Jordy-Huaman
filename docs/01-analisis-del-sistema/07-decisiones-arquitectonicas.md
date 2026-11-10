@@ -19,6 +19,7 @@ ADR significa Architecture Decision Record (Registro de Decisión Arquitectónic
 | ADR005 | API REST como mecanismo de comunicación | DA05 API REST | La restricción RC03 exige que el frontend y el backend se comuniquen mediante una API REST. | Contratos REST entre frontend y backend. |
 | ADR006 | Clean Architecture como enfoque interno | DA06 Mantenibilidad | Separar las reglas de negocio de los detalles tecnológicos facilita las pruebas y el mantenimiento. | Capas de Dominio, Aplicación, Infraestructura y Presentación. |
 | ADR007 | Libro interno de saldos y fondos agrupados en un proveedor custodial | DA01 Consistencia, DA04 Servicios externos, DA07 Libro y custodia | El alcance académico debe demostrar movimientos internos consistentes sin operar fondos reales ni acoplar las reglas a un proveedor. | QuillaCoin mantiene el libro autoritativo; las transferencias internas son contables y atómicas; los retiros externos pasan por el proveedor y se reconcilian por estado. La primera fase simula proveedor y saldos en sandbox/testnet. |
+| ADR008 | Asistencia conversacional y análisis de riesgo desacoplado | DA08 Resiliencia asíncrona, DA09 Uso responsable de IA, DA10 Calidad del análisis | La IA aporta asistencia y señales de riesgo sin introducir latencia o autoridad sobre el libro y las cuentas. | Chat acotado y separado; análisis asíncrono desde outbox durable; alertas no vinculantes, evaluadas y sujetas a revisión administrativa. |
 
 ---
 
@@ -33,6 +34,7 @@ ADR significa Architecture Decision Record (Registro de Decisión Arquitectónic
 | ADR005 | DA05 | API REST |
 | ADR006 | DA06 | Mantenibilidad |
 | ADR007 | DA01, DA04, DA07 | Consistencia, integración y custodia |
+| ADR008 | DA08, DA09, DA10 | Resiliencia, privacidad, trazabilidad, supervisión y efectividad |
 
 ---
 
@@ -116,3 +118,28 @@ Una transferencia entre usuarios de QuillaCoin genera un débito y un crédito i
 - Las solicitudes externas pueden tener resultados tardíos o inciertos; se requieren estados, reintentos idempotentes y reconciliación antes de considerarlas finales.
 - No se ha seleccionado un proveedor. Antes de operar con fondos reales se deberán validar sus capacidades y condiciones para cuentas agrupadas, retiros y operación en Perú, además de los requisitos legales y regulatorios aplicables.
 - Los activos digitales, la pasarela peruana, la base de datos, el caché y la política de promoción a producción siguen por definir.
+
+---
+
+### ADR008 - Asistencia conversacional y análisis de riesgo desacoplado
+
+**Estado.** Aceptada como dirección de diseño; proveedor de IA, cola y política de retención pendientes. No implica que estas capacidades estén implementadas.
+
+**Decisión.** QuillaCoin ofrece un chat de asistencia a través del backend y una capacidad de análisis posterior de señales de operaciones. El chat solo responde preguntas sobre el uso de la plataforma y, si consulta datos de cuenta, lo hace mediante operaciones autorizadas del backend limitadas al usuario autenticado. No ejecuta transferencias, compras, retiros ni acciones administrativas.
+
+Para análisis de riesgo, los eventos de negocio —inicialmente, las transferencias internas— se escriben en un outbox durable dentro de la misma transacción que confirma el movimiento correspondiente. Un worker los reclama y procesa fuera de la ruta HTTP y puede solicitar una evaluación a reglas deterministas o a un proveedor de IA. La salida genera una sugerencia/alerta para revisión, no una decisión financiera o de seguridad.
+
+**Drivers.** DA08 (Análisis asíncrono), DA09 (Uso responsable de IA) y DA10 (Calidad del análisis).
+
+**Justificación.** La generación de texto y los modelos externos tienen latencia, errores y resultados probabilísticos. Separarlos evita que una falla externa afecte la consistencia del libro, mientras que el outbox permite reintentar el análisis sin perder eventos confirmados.
+
+**Consecuencias y restricciones.**
+
+- La transferencia no espera al proveedor de IA. El evento debe ser durable, identificable y procesado de forma idempotente; los fallos deben reintentarse y quedar observables para su recuperación.
+- La falta temporal del proveedor puede retrasar alertas, pero no alterar el resultado ya confirmado ni impedir las operaciones financieras.
+- El modelo solo recibe señales minimizadas y autorizadas; no se envían credenciales, secretos ni información personal innecesaria. Deben evaluarse las condiciones de uso, retención y tratamiento de datos del proveedor antes de integrarlo.
+- Las respuestas y puntuaciones deben conservar la referencia del evento y la versión de reglas/modelo. Una alerta no equivale a fraude confirmado.
+- Solo un administrador autorizado puede revisar y resolver alertas. Cualquier suspensión o restricción se ejecuta mediante una acción separada, explícita y auditada; la IA no congela cuentas ni bloquea operaciones.
+- El chat no es fuente de verdad ni canal para ejecutar transacciones. Si el proveedor no está disponible, se informa el fallo y se mantienen independientes las funciones principales.
+- Inicialmente el worker puede reclamar eventos pendientes directamente desde el outbox; un broker externo solo se añade si los requisitos de escala lo justifican. La política de reintentos, retención y recuperación de eventos agotados queda por definir.
+- Los umbrales de calidad, el historial conversacional y las políticas de retención quedan por definir antes de implementar. Los resultados se evalúan con datos etiquetados y no se presentan como detección cierta de fraude.

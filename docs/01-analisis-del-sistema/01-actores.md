@@ -11,11 +11,12 @@ Determinar quiénes interactúan con el sistema y qué necesitan realizar.
 | Actor | ¿Qué necesita realizar? |
 |-------|-------------------------|
 | Usuario en Perú | Registrarse, iniciar sesión, consultar sus saldos, comprar activos, transferirlos internamente, solicitar retiros externos y consultar el historial de sus operaciones. |
-| Administrador | Administrar las cuentas de usuario, supervisar las operaciones, consultar registros y gestionar la configuración general del sistema. |
+| Administrador | Administrar las cuentas de usuario, supervisar las operaciones y alertas de riesgo, consultar registros y gestionar la configuración general del sistema. |
 | Pasarela de pagos | Procesar los pagos realizados por los usuarios para la compra de criptomonedas y comunicar el resultado de las operaciones. |
 | Proveedor custodial de criptomonedas | Mantener los fondos agrupados del modelo objetivo y proporcionar, mediante API, servicios de consulta, adquisición y retiros externos. En la fase académica se simula. |
 | Red blockchain | Liquidar los retiros externos cuando el proveedor custodial los envía a la cadena; QuillaCoin no se integra directamente en la fase académica. |
 | Servicio de notificaciones | Enviar notificaciones a los usuarios sobre el estado de sus compras, transferencias internas y retiros. |
+| Proveedor de IA | Responder consultas acotadas del asistente y, si se selecciona esta opción, analizar señales minimizadas de operaciones. No autoriza movimientos ni ejecuta acciones de seguridad. |
 
 ---
 
@@ -24,7 +25,7 @@ Determinar quiénes interactúan con el sistema y qué necesitan realizar.
 | Tipo | Actores |
 |------|---------|
 | Usuarios humanos | Usuario en Perú, Administrador |
-| Sistemas externos | Pasarela de pagos, Proveedor custodial de criptomonedas, Red blockchain (integrada por el proveedor), Servicio de notificaciones |
+| Sistemas externos | Pasarela de pagos, Proveedor custodial de criptomonedas, Red blockchain (integrada por el proveedor), Servicio de notificaciones, Proveedor de IA |
 
 ---
 
@@ -32,7 +33,7 @@ Determinar quiénes interactúan con el sistema y qué necesitan realizar.
 
 **Usuario.** Persona ubicada en Perú y registrada en la plataforma que consulta saldos, compra activos mediante medios locales disponibles, realiza transferencias internas, solicita retiros externos y revisa su historial.
 
-**Administrador.** Responsable de la operación de la plataforma, gestiona cuentas, supervisa las transacciones y ajusta la configuración general del sistema.
+**Administrador.** Responsable de la operación de la plataforma, gestiona cuentas, supervisa transacciones y alertas, revisa y registra la resolución de señales de riesgo, y ajusta la configuración general del sistema.
 
 **Pasarela de pagos.** Servicio externo que procesa los pagos asociados a la compra de criptomonedas y devuelve el resultado de cada operación.
 
@@ -41,6 +42,8 @@ Determinar quiénes interactúan con el sistema y qué necesitan realizar.
 **Red blockchain.** Infraestructura que valida y registra las operaciones on-chain originadas por el proveedor al procesar retiros externos; no interviene en las transferencias internas de QuillaCoin.
 
 **Servicio de notificaciones.** Servicio externo que informa al usuario sobre el estado de sus compras, transferencias internas y retiros.
+
+**Proveedor de IA.** Servicio externo opcional seleccionado mediante un adaptador. Recibe solo el contexto mínimo permitido para responder al chat o evaluar señales de riesgo; su salida es no vinculante y no puede realizar operaciones financieras ni suspender cuentas.
 
 ---
 

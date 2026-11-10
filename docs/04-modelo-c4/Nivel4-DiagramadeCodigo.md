@@ -9,6 +9,8 @@
 
 Mostrar una propuesta de organización para el flujo **Transferir internamente activos entre usuarios**. Esta operación solo cambia el libro de saldos de QuillaCoin. Los retiros externos son otro flujo: se registran con estados y se solicitan al proveedor custodial.
 
+El chat y el worker de análisis de riesgo son capacidades separadas, descritas en ADR008 y en el C4 de niveles 2 y 3; no forman parte de esta secuencia de transferencia.
+
 | Aspecto | Descripción |
 |---|---|
 | Pregunta que responde | ¿Qué clases existen dentro de un módulo y cómo se relacionan? |

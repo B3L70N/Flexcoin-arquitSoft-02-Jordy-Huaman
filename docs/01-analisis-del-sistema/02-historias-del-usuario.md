@@ -20,6 +20,8 @@ Describir las principales necesidades de los usuarios mediante el formato **Como
 | HU08 | Como usuario, quiero recibir notificaciones sobre el estado de mis operaciones, para conocer el resultado de mis compras, transferencias internas y retiros. |
 | HU09 | Como usuario, quiero solicitar un retiro a una dirección externa compatible, para disponer de mis activos fuera de la plataforma y consultar el estado informado por el proveedor. |
 | HU10 | Como usuario, quiero consultar el estado de mis depósitos de criptomonedas, para verificar cuándo se acreditan en mi cuenta. |
+| HU11 | Como usuario, quiero preguntar al asistente cómo usar QuillaCoin y consultar mis operaciones autorizadas, para recibir ayuda sin exponer los datos de otros usuarios ni ejecutar movimientos financieros desde el chat. |
+| HU12 | Como administrador autorizado, quiero revisar alertas de riesgo generadas por el análisis de operaciones y registrar mi evaluación, para investigar actividad inusual sin delegar decisiones de bloqueo al modelo. |
 
 ---
 
@@ -27,8 +29,8 @@ Describir las principales necesidades de los usuarios mediante el formato **Como
 
 | Actor | Historias asociadas |
 |-------|---------------------|
-| Usuario | HU01, HU02, HU03, HU04, HU05, HU08, HU09, HU10 |
-| Administrador | HU06, HU07 |
+| Usuario | HU01, HU02, HU03, HU04, HU05, HU08, HU09, HU10, HU11 |
+| Administrador | HU06, HU07, HU12 |
 
 ---
 
@@ -46,3 +48,5 @@ Describir las principales necesidades de los usuarios mediante el formato **Como
 | Notificaciones | HU08 |
 | Retiro a billetera externa | HU09 |
 | Depósitos de criptomonedas | HU10 |
+| Asistencia conversacional | HU11 |
+| Supervisión de riesgo | HU12 |

@@ -8,9 +8,9 @@ Definir el estilo arquitectónico del sistema QuillaCoin y representar su estruc
 
 ## Estilo seleccionado
 
-**Monolito modular con arquitectura en capas.**
+**Monolito modular con arquitectura en capas y worker asíncrono complementario.**
 
-El sistema se despliega como una aplicación única, pero internamente se organiza en módulos independientes y capas bien definidas. Esta combinación responde a los drivers arquitectónicos identificados en el análisis.
+La API principal se organiza en módulos independientes y capas bien definidas. Un proceso worker ejecuta análisis de riesgo en segundo plano desde eventos durables; comparte el modelo y los contratos del backend, pero puede desplegarse y escalarse independientemente. No convierte los módulos de negocio en microservicios.
 
 ---
 
@@ -22,6 +22,8 @@ El sistema se despliega como una aplicación única, pero internamente se organi
 | DA02 Rendimiento | La separación por capas permite incorporar caché para consultas frecuentes de saldos. |
 | DA03 Seguridad | La autenticación y autorización se gestionan en la capa de presentación y en los servicios de usuarios. |
 | DA04 Servicios externos | Los adaptadores para la pasarela de pagos y el proveedor de criptomonedas se aíslan en la capa de datos e infraestructura. |
+| DA08 Análisis asíncrono | Un outbox y un worker aíslan la latencia o falla del proveedor de IA de las operaciones financieras confirmadas. |
+| DA09 Uso responsable de IA | El chat consulta solo datos autorizados y el análisis genera alertas no vinculantes; no ejecuta movimientos ni bloquea cuentas. |
 | DA06 Mantenibilidad | La modularidad y las capas permiten modificar una parte del sistema sin afectar otras. |
 
 ---
@@ -48,6 +50,8 @@ El sistema se despliega como una aplicación única, pero internamente se organi
 | 6. Pagos | Cobro mediante la pasarela de pago. |
 | 7. Notificaciones | Avisos al usuario sobre el estado de sus operaciones. |
 | 8. Integridad transaccional | Garantías de concurrencia aplicadas al libro por el almacenamiento autoritativo; no es un bloqueo en memoria. |
+| 9. Asistencia conversacional | Chat servido por la API; responde preguntas y consulta datos del usuario solo mediante operaciones autorizadas. No ejecuta operaciones financieras. |
+| 10. Análisis de riesgo | Worker separado que consume eventos durables y produce sugerencias/alertas para revisión administrativa; no tiene autoridad para bloquear. |
 
 ---
 
@@ -59,6 +63,7 @@ El sistema se despliega como una aplicación única, pero internamente se organi
 | Proveedor custodial de criptomonedas | Mantener fondos agrupados y procesar adquisiciones/retiros externos; en la fase académica se usa un adaptador simulado. |
 | Red blockchain | Liquidar retiros externos bajo responsabilidad del proveedor cuando corresponda; QuillaCoin no se integra directamente en la fase inicial. |
 | Servicio de notificaciones | Informar al usuario sobre el estado de sus operaciones. |
+| Proveedor de IA | Producir respuestas o evaluaciones a través de un adaptador; proveedor por seleccionar y sujeto a minimización de datos. |
 
 ---
 
@@ -95,6 +100,8 @@ flowchart TD
         A4[Transferir criptomonedas]
         A5[Consultar historial]
         A6[Retirar criptomonedas]
+        A7[Atender consulta del asistente]
+        A8[Analizar evento de operación]
     end
 
     subgraph Dominio ["Dominio (núcleo)"]
@@ -109,6 +116,8 @@ flowchart TD
         I3[Proveedor de criptomonedas]
         I4[Proveedor custodial para retiros]
         I5[Notificaciones]
+        I6[Proveedor de IA]
+        I7[Outbox y transporte de eventos]
     end
 
     P1 --> A1
@@ -117,6 +126,7 @@ flowchart TD
     P1 --> A4
     P1 --> A5
     P1 --> A6
+    P1 --> A7
 
     A1 --> D2
     A2 --> D2
@@ -124,6 +134,8 @@ flowchart TD
     A4 --> D2
     A5 --> D2
     A6 --> D2
+    A7 --> D2
+    A8 --> D2
 
     D2 --> D1
     D2 --> D3
@@ -133,4 +145,6 @@ flowchart TD
     I3 -.->|implementa| D2
     I4 -.->|implementa| D2
     I5 -.->|implementa| D2
+    I6 -.->|implementa| D2
+    I7 -.->|implementa| D2
 ```

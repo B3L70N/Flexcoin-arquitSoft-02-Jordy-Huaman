@@ -24,6 +24,7 @@ Mostrar **QuillaCoin como una sola caja**: quiénes lo usan y con qué sistemas 
 flowchart TB
     Usuario["👤 Usuario en Perú<br/>[Persona]<br/>Compra, transfiere y consulta criptomonedas"]
     Admin["👤 Administrador<br/>[Persona]<br/>Gestiona usuarios y supervisa operaciones"]
+    IAAdmin["👤 Administrador autorizado<br/>[Rol de revisión de riesgo]<br/>Revisa alertas generadas por el análisis"]
 
     QuillaCoin["💰 QuillaCoin<br/>[Sistema de software]<br/>Mantiene un libro interno de saldos; en la fase académica opera solo en sandbox/testnet"]
 
@@ -31,14 +32,17 @@ flowchart TB
     Proveedor["🪙 Proveedor custodial de criptomonedas<br/>[Sistema externo]<br/>Mantiene fondos agrupados y procesa retiros externos; integración por seleccionar"]
     Blockchain["⛓️ Red blockchain<br/>[Sistema externo del proveedor]<br/>Liquida retiros on-chain cuando corresponda"]
     Notif["🔔 Servicio de notificaciones<br/>[Sistema externo]<br/>Envía avisos al usuario sobre sus operaciones"]
+    ProveedorIA["🤖 Proveedor de IA<br/>[Sistema externo opcional]<br/>Responde consultas acotadas y evalúa señales minimizadas"]
 
     Usuario -->|Consulta saldos, compra y transfiere criptomonedas| QuillaCoin
     Admin -->|Gestiona usuarios y supervisa operaciones| QuillaCoin
+    IAAdmin -->|Revisa alertas; decide medidas por flujo administrativo auditado| QuillaCoin
 
     QuillaCoin -->|Solicita cobros HTTPS/REST| Pasarela
     QuillaCoin -->|Consulta o solicita retiros externos HTTPS/REST| Proveedor
     Proveedor -->|Liquida retiros on-chain cuando corresponda| Blockchain
     QuillaCoin -->|Envía notificaciones HTTPS/REST| Notif
+    QuillaCoin -->|Envía contexto minimizado para asistencia/análisis| ProveedorIA
 
     style Usuario fill:#1f3a93,stroke:#0d1e4c,color:#ffffff
     style Admin fill:#1f3a93,stroke:#0d1e4c,color:#ffffff
@@ -56,7 +60,7 @@ flowchart TB
 | Persona | Descripción | Qué hace en el sistema |
 |---|---|---|
 | **Usuario** | Persona ubicada en Perú que opera con criptomonedas | Consulta saldos, compra mediante medios de pago locales, transfiere internamente a otros usuarios, solicita retiros externos y consulta su historial |
-| **Administrador** | Responsable de la operación de QuillaCoin | Gestiona cuentas de usuario, supervisa las operaciones y configura el sistema |
+| **Administrador / revisor autorizado** | Responsable de la operación de QuillaCoin | Gestiona cuentas, supervisa operaciones y alertas, revisa y registra resoluciones mediante funciones autorizadas |
 
 ---
 
@@ -69,6 +73,7 @@ flowchart TB
 | **Proveedor custodial de criptomonedas** | Sistema externo | Mantiene fondos agrupados y expone operaciones y estados mediante API; proveedor y condiciones por validar | Exchange o proveedor de servicios cripto |
 | **Red blockchain** | Sistema externo del proveedor | Liquida retiros on-chain cuando corresponda; QuillaCoin no se integra directamente en la fase inicial | Infraestructura de la red elegida por el proveedor |
 | **Servicio de notificaciones** | Sistema externo | Envía al usuario avisos sobre el estado de sus operaciones | Proveedor de correo, SMS o push |
+| **Proveedor de IA** | Sistema externo opcional | Atiende consultas acotadas y analiza señales de riesgo minimizadas; no ejecuta operaciones ni bloquea cuentas | Proveedor por seleccionar |
 
 ---
 
@@ -78,10 +83,13 @@ flowchart TB
 |---|---|---|---|
 | Usuario | QuillaCoin | Consulta saldos, compra y transfiere criptomonedas | - |
 | Administrador | QuillaCoin | Gestiona usuarios y supervisa operaciones | - |
+| Usuario | QuillaCoin | Formula preguntas al asistente; solo consulta información propia autorizada | - |
+| Revisor de riesgo | QuillaCoin | Revisa y resuelve alertas mediante funciones administrativas auditadas | - |
 | QuillaCoin | Pasarela de pago | Solicita cobros | HTTPS/REST |
 | QuillaCoin | Proveedor custodial | Consulta información o solicita retiros externos, separados de las transferencias internas | HTTPS/REST |
 | Proveedor custodial | Red blockchain | Liquida en cadena los retiros externos cuando corresponda | Protocolo del proveedor |
 | QuillaCoin | Servicio de notificaciones | Envía avisos de estado de las operaciones | HTTPS/REST |
+| QuillaCoin | Proveedor de IA | Envía contexto minimizado para contestar el chat o evaluar eventos en segundo plano | HTTPS/API del proveedor |
 
 > En el nivel 1 no se indica el protocolo entre personas y sistema: eso se detalla en el nivel 2.
 
@@ -106,3 +114,5 @@ flowchart TB
 | Selección de activos | Elegir activos disponibles para el mercado peruano y el proveedor seleccionado, considerando liquidez, mínimos y comisiones de operación y retiro; el precio unitario no es el único criterio |
 | Base de datos y caché | Comparar alternativas compatibles con Cloudflare y validar transacciones, consistencia y soporte; el caché no será fuente de verdad |
 | Despliegue CI/CD | Definir entornos, verificaciones y política de promoción; la automatización forma parte del alcance previsto |
+| IA y privacidad | Seleccionar proveedor, validar condiciones de tratamiento/retención, datos permitidos y metas del chat/análisis |
+| Revisión de alertas | Definir señales, niveles, responsables, procedimiento de revisión y retención de auditoría; la IA no bloquea cuentas |
